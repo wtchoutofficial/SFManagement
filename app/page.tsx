@@ -1,17 +1,23 @@
-import { FadeIn } from "@/components/ui/FadeIn";
-import { Button } from "@/components/ui/Button";
-import { SectionHeading } from "@/components/ui/SectionHeading";
+import { Navbar } from "@/components/sections/Navbar";
+import { Hero } from "@/components/sections/Hero";
+import { Services } from "@/components/sections/Services";
+import { WhyUs } from "@/components/sections/WhyUs";
+import { Stats } from "@/components/sections/Stats";
+import { Process } from "@/components/sections/Process";
+import { ApplicationForm } from "@/components/sections/ApplicationForm";
+import { Footer } from "@/components/sections/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center gap-8">
-      <SectionHeading label="Test" title="UI Primitives" description="Working correctly" />
-      <FadeIn>
-        <Button>Primary</Button>
-      </FadeIn>
-      <FadeIn delay={0.2}>
-        <Button variant="outline">Outline</Button>
-      </FadeIn>
+    <main>
+      <Navbar />
+      <Hero />
+      <Services />
+      <WhyUs />
+      <Stats />
+      <Process />
+      <ApplicationForm />
+      <Footer />
     </main>
   );
 }

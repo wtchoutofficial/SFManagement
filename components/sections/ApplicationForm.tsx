@@ -302,7 +302,7 @@ export function ApplicationForm() {
                           duration: 0.3,
                           ease: [0.25, 0.46, 0.45, 0.94],
                         }}
-                        className="w-full inline-flex items-center justify-center gap-2 font-semibold rounded-full px-8 py-4 text-base bg-white text-black hover:bg-neutral-200 hover:shadow-lg hover:shadow-white/10 cursor-pointer btn-glow transition-colors duration-300"
+                        className="w-full inline-flex items-center justify-center gap-2 font-semibold rounded-full px-8 py-4 text-base bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-lg hover:shadow-white/5 cursor-pointer btn-glow transition-all duration-300"
                       >
                         Continue
                       </motion.button>
@@ -367,7 +367,7 @@ export function ApplicationForm() {
                           duration: 0.3,
                           ease: [0.25, 0.46, 0.45, 0.94],
                         }}
-                        className="w-full inline-flex items-center justify-center gap-2 font-semibold rounded-full px-8 py-4 text-base bg-white text-black hover:bg-neutral-200 hover:shadow-lg hover:shadow-white/10 cursor-pointer btn-glow disabled:opacity-70 transition-colors duration-300"
+                        className="w-full inline-flex items-center justify-center gap-2 font-semibold rounded-full px-8 py-4 text-base bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/30 hover:shadow-lg hover:shadow-white/5 cursor-pointer btn-glow disabled:opacity-70 transition-all duration-300"
                       >
                         {status === "submitting" ? (
                           <>

@@ -44,7 +44,7 @@ export function StickyMobileCTA() {
         >
           <a
             href="#apply"
-            className="block w-full text-center font-semibold rounded-full py-4 bg-white text-black hover:bg-neutral-200 transition-colors duration-300 btn-glow"
+            className="block w-full text-center font-semibold rounded-full py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white hover:bg-white/20 hover:border-white/30 transition-all duration-300 btn-glow"
           >
             Apply Now
           </a>

@@ -26,7 +26,7 @@ export function AnimatedCounter({
   className = "",
 }: AnimatedCounterProps) {
   const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const isInView = useInView(ref, { once: true, margin: "-20px" });
   const [display, setDisplay] = useState("0");
   const isMobile = useIsMobile();
   const effectiveDuration = isMobile ? Math.min(duration, 1000) : duration;

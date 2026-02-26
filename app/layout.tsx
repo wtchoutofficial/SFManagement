@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Prompt } from "next/font/google";
-import { ScrollToTop } from "@/components/ui/ScrollToTop";
+import Script from "next/script";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakarta.variable} ${prompt.variable}`}>
       <body className="font-sans">
-        <ScrollToTop />
+        <Script id="scroll-top" strategy="beforeInteractive">{`if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);`}</Script>
         {children}
       </body>
     </html>

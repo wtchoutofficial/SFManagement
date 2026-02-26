@@ -122,7 +122,7 @@ export function WhyUs() {
               variants={cardVariants}
               whileHover={isMobile ? undefined : { y: -8, scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="feature-card group relative rounded-2xl p-10 md:p-12 text-center overflow-hidden"
+              className="feature-card group relative rounded-2xl p-6 sm:p-10 md:p-12 text-center overflow-hidden"
             >
               {/* Hover glow */}
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_40%,rgba(124,58,237,0.08),transparent_70%)] pointer-events-none" />
@@ -157,7 +157,7 @@ export function WhyUs() {
             <motion.div
               whileHover={isMobile ? undefined : { y: -6 }}
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="card-glow p-10 md:p-12 h-full rounded-2xl"
+              className="card-glow p-6 sm:p-10 md:p-12 h-full rounded-2xl"
             >
               <h3 className="text-xl md:text-2xl font-semibold text-muted mb-8 font-heading">
                 Industry Standard
@@ -177,7 +177,7 @@ export function WhyUs() {
             <motion.div
               whileHover={isMobile ? undefined : { y: -6 }}
               transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="sf-card relative p-10 md:p-12 h-full rounded-2xl overflow-hidden"
+              className="sf-card relative p-6 sm:p-10 md:p-12 h-full rounded-2xl overflow-hidden"
             >
               {/* Gradient glow behind the card */}
               <div className="absolute -inset-px rounded-2xl bg-gradient-to-br from-purple-500/30 via-blue-500/20 to-pink-500/30 -z-10 blur-sm" />

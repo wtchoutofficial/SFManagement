@@ -11,10 +11,10 @@ export function MarqueeStrip() {
         {words.map((word) => (
           <span
             key={word}
-            className="text-2xl md:text-3xl font-bold font-heading text-surface-light mx-8"
+            className="text-lg sm:text-2xl md:text-3xl font-bold font-heading text-surface-light mx-4 sm:mx-8"
           >
             {word}
-            <span className="text-muted mx-8">&bull;</span>
+            <span className="text-muted mx-4 sm:mx-8">&bull;</span>
           </span>
         ))}
       </Marquee>

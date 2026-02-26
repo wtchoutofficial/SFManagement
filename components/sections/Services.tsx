@@ -131,7 +131,7 @@ export function Services() {
               variants={cardVariants}
               whileHover={isMobile ? undefined : { y: -8, scale: 1.02 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              className="service-card group relative rounded-2xl p-8 md:p-10 overflow-hidden"
+              className="service-card group relative rounded-2xl p-6 sm:p-8 md:p-10 overflow-hidden"
             >
               {/* Colored glow on hover */}
               <div

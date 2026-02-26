@@ -14,14 +14,14 @@ export function Stats() {
     <section className="py-16 relative">
       <div className="gradient-divider" />
       <div className="container-narrow py-16">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-0 md:divide-x md:divide-surface-light">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-0 md:divide-x md:divide-surface-light">
           {stats.map((stat, i) => (
             <FadeIn
               key={stat.label}
               delay={i * 0.15}
-              className="flex-1 text-center px-8"
+              className="flex-1 text-center px-4 md:px-8"
             >
-              <div className="text-4xl md:text-5xl font-bold text-accent font-heading">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-accent font-heading">
                 <AnimatedCounter
                   value={stat.value}
                   prefix={stat.prefix}

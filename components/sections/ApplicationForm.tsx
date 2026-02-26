@@ -204,7 +204,7 @@ export function ApplicationForm() {
               initial={{ opacity: 0, y: 20, scale: 0.97 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="bg-surface border border-surface-light rounded-2xl p-12 text-center"
+              className="bg-surface border border-surface-light rounded-2xl p-8 md:p-12 text-center"
             >
               <motion.div
                 initial={{ scale: 0 }}

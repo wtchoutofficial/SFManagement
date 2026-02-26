@@ -14,10 +14,10 @@ export function SocialProofBar() {
     <section className="py-6 border-y border-surface-light">
       <div className="container-narrow">
         <FadeIn>
-          <div className="flex flex-wrap justify-center gap-12 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-10 text-center">
             {stats.map((stat) => (
-              <div key={stat.label} className="min-w-[120px]">
-                <p className="text-2xl font-bold font-heading text-text">
+              <div key={stat.label}>
+                <p className="text-xl sm:text-2xl font-bold font-heading text-text">
                   {stat.value}
                 </p>
                 <p className="text-xs uppercase tracking-widest text-muted mt-1">

@@ -93,7 +93,7 @@ export function Navbar() {
           {/* Left — Logo */}
           <a href="#home" className="flex items-center gap-3 font-bold text-text transition-all duration-300 font-heading">
             <Image src="/sf-crown.png" alt="SF Management" width={40} height={40} priority className="h-10 w-auto" />
-            <span className="text-lg">SF Management</span>
+            <span className="text-lg whitespace-nowrap">SF Management</span>
           </a>
 
           {/* Center — Nav links */}
@@ -119,7 +119,7 @@ export function Navbar() {
           {/* Hamburger */}
           <button
             ref={buttonRef}
-            className="md:hidden flex flex-col gap-1.5 p-2 justify-self-end"
+            className="md:hidden flex flex-col gap-1.5 p-2 col-start-3 justify-self-end"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}

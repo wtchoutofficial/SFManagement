@@ -1,32 +1,39 @@
 "use client";
 
 import { FadeIn } from "@/components/ui/FadeIn";
+import { AnimatedCounter } from "@/components/ui/AnimatedCounter";
 
 const stats = [
-  { value: "Norway", label: "Founded In" },
-  { value: "7-Figure", label: "Revenue Generated" },
-  { value: "100%", label: "Full Discretion" },
+  { value: 100, suffix: "%", label: "Discretion Guaranteed" },
+  { value: 24, suffix: "hr", label: "Response Time" },
+  { prefix: "", value: 6, suffix: "-Figure", label: "Monthly Target" },
 ];
 
 export function Stats() {
   return (
-    <section className="bg-surface-light py-16">
-      <div className="container-narrow">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-0 md:divide-x md:divide-muted/20">
+    <section className="py-16 relative">
+      <div className="gradient-divider" />
+      <div className="container-narrow py-16">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-12 md:gap-0 md:divide-x md:divide-surface-light">
           {stats.map((stat, i) => (
             <FadeIn
               key={stat.label}
               delay={i * 0.15}
               className="flex-1 text-center px-8"
             >
-              <div className="text-3xl md:text-4xl font-bold text-accent">
-                {stat.value}
+              <div className="text-4xl md:text-5xl font-bold text-accent font-heading">
+                <AnimatedCounter
+                  value={stat.value}
+                  prefix={stat.prefix}
+                  suffix={stat.suffix}
+                />
               </div>
               <div className="text-muted text-sm mt-2">{stat.label}</div>
             </FadeIn>
           ))}
         </div>
       </div>
+      <div className="gradient-divider" />
     </section>
   );
 }

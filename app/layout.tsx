@@ -21,7 +21,10 @@ export const metadata: Metadata = {
   description:
     "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
   icons: {
-    icon: "/sf-crown.png",
+    icon: [
+      { url: "/sf-crown-dark.png", media: "(prefers-color-scheme: light)" },
+      { url: "/sf-crown.png", media: "(prefers-color-scheme: dark)" },
+    ],
     apple: "/sf-crown.png",
   },
   openGraph: {

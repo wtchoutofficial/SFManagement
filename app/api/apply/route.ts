@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     await resend.emails.send({
-      from: "SF Management <onboarding@resend.dev>",
+      from: "SF Management <noreply@sfmanagement.eu>",
       replyTo: email,
       to: "Thomas@sfmanagement.eu",
       subject: `New Creator Application: ${name}`,

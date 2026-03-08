@@ -3,8 +3,8 @@
 import { FadeIn } from "@/components/ui/FadeIn";
 
 const stats = [
-  { value: "45+", label: "Creators Managed" },
-  { value: "$2.4M+", label: "Revenue Generated" },
+  { value: "10+", label: "Creators Managed" },
+  { value: "$2M+", label: "Revenue Generated" },
   { value: "24hr", label: "Average Response Time" },
   { value: "100%", label: "Discretion Guaranteed" },
 ];

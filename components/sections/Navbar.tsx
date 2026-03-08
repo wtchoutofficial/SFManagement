@@ -89,10 +89,6 @@ export function Navbar() {
             : "bg-background md:bg-transparent"
         }`}
       >
-        {/* Solid cover above navbar content on mobile */}
-        <div className={`absolute bottom-full left-0 right-0 h-20 md:hidden ${
-          scrolled ? "bg-[#111118]" : "bg-[#0B0B0F]"
-        }`} />
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
           {/* Left — Logo */}
           <a href="#home" className="flex items-center gap-3 font-bold text-text transition-all duration-300 font-heading">

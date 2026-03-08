@@ -20,6 +20,24 @@ export const metadata: Metadata = {
   title: "SF Management — Premium Creator Management Agency",
   description:
     "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
+  icons: {
+    icon: "/sf-crown.png",
+    apple: "/sf-crown.png",
+  },
+  openGraph: {
+    title: "SF Management — Premium Creator Management Agency",
+    description:
+      "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
+    images: [{ url: "/sf-crown.png" }],
+    siteName: "SF Management",
+  },
+  twitter: {
+    card: "summary",
+    title: "SF Management — Premium Creator Management Agency",
+    description:
+      "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
+    images: ["/sf-crown.png"],
+  },
 };
 
 export default function RootLayout({

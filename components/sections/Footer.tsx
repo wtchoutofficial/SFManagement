@@ -88,7 +88,7 @@ export function Footer() {
           <div className="gradient-divider" />
           <div className="pt-8 flex flex-col items-center gap-4">
             <p className="text-xs text-muted">
-              &copy; 2026 SF Management AS &middot; Org.nr: 931 562 371
+              &copy; SF Management AS &middot; Etablert 2023 &middot; Org.nr: 931 562 371
             </p>
             <p className="text-xs text-muted text-center">
               SF Management is an independent agency. We are not affiliated with,

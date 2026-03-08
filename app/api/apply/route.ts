@@ -4,7 +4,7 @@ import { Resend } from "resend";
 export async function POST(request: Request) {
   try {
     const resend = new Resend(process.env.RESEND_API_KEY);
-    const { name, email, handle, countryCode, phone, goals } = await request.json();
+    const { name, email, handle, tiktok, countryCode, phone, goals } = await request.json();
 
     if (!name || !email || !handle) {
       return NextResponse.json(
@@ -23,7 +23,8 @@ export async function POST(request: Request) {
         <table style="border-collapse:collapse;font-family:sans-serif;">
           <tr><td style="padding:8px;font-weight:bold;">Name</td><td style="padding:8px;">${name}</td></tr>
           <tr><td style="padding:8px;font-weight:bold;">Email</td><td style="padding:8px;"><a href="mailto:${email}">${email}</a></td></tr>
-          <tr><td style="padding:8px;font-weight:bold;">Handle</td><td style="padding:8px;">${handle}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;">Instagram</td><td style="padding:8px;">${handle}</td></tr>
+          <tr><td style="padding:8px;font-weight:bold;">TikTok</td><td style="padding:8px;">${tiktok || "Not provided"}</td></tr>
           <tr><td style="padding:8px;font-weight:bold;">Phone</td><td style="padding:8px;">${countryCode} ${phone}</td></tr>
           <tr><td style="padding:8px;font-weight:bold;">Goals</td><td style="padding:8px;">${goals || "Not provided"}</td></tr>
         </table>

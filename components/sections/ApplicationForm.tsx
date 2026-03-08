@@ -150,6 +150,7 @@ export function ApplicationForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [handle, setHandle] = useState("");
+  const [tiktok, setTiktok] = useState("");
   const [countryCode, setCountryCode] = useState("+47");
   const [phone, setPhone] = useState("");
   const [goals, setGoals] = useState("");
@@ -172,7 +173,7 @@ export function ApplicationForm() {
       const res = await fetch("/api/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, handle, countryCode, phone, goals }),
+        body: JSON.stringify({ name, email, handle, tiktok, countryCode, phone, goals }),
       });
       if (!res.ok) throw new Error("Failed");
       setStatus("success");
@@ -298,11 +299,17 @@ export function ApplicationForm() {
                         onChange={setEmail}
                       />
                       <FloatingInput
-                        label="@yourhandle"
+                        label="Instagram @handle"
                         type="text"
                         required
                         value={handle}
                         onChange={setHandle}
+                      />
+                      <FloatingInput
+                        label="TikTok @handle (optional)"
+                        type="text"
+                        value={tiktok}
+                        onChange={setTiktok}
                       />
                       <motion.button
                         type="button"

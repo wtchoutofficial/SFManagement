@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Prompt } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -51,10 +50,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakarta.variable} ${prompt.variable}`}>
       <head>
-        <script>{`history.scrollRestoration="manual";window.scrollTo(0,0);`}</script>
+        <script dangerouslySetInnerHTML={{__html:`history.scrollRestoration="manual";window.scrollTo(0,0);var __st=Date.now();(function f(){if(Date.now()-__st<1500){window.scrollTo(0,0);requestAnimationFrame(f)}})();window.addEventListener("pageshow",function(e){if(e.persisted){window.scrollTo(0,0);var t=Date.now();(function g(){if(Date.now()-t<500){window.scrollTo(0,0);requestAnimationFrame(g)}})()}});`}} />
       </head>
       <body className="font-sans">
-        <Script id="scroll-events" strategy="afterInteractive">{`window.scrollTo(0,0);window.addEventListener("pageshow",function(e){if(e.persisted)window.scrollTo(0,0)});window.addEventListener("beforeunload",function(){window.scrollTo(0,0)});`}</Script>
         {children}
       </body>
     </html>

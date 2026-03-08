@@ -142,7 +142,7 @@ const slideVariants = {
 export function ApplicationForm() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
+  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">(
     "idle"
   );
 
@@ -178,7 +178,7 @@ export function ApplicationForm() {
       if (!res.ok) throw new Error("Failed");
       setStatus("success");
     } catch {
-      setStatus("success");
+      setStatus("error");
     }
   };
 
@@ -241,6 +241,27 @@ export function ApplicationForm() {
               <p className="text-muted mt-3">
                 We&apos;ll review your profile and reach out within 24 hours.
               </p>
+            </motion.div>
+          ) : status === "error" ? (
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="bg-surface border border-red-500/30 rounded-2xl p-8 md:p-12 text-center"
+            >
+              <p className="text-2xl font-semibold font-heading">
+                Something went wrong
+              </p>
+              <p className="text-muted mt-3">
+                Your application could not be sent. Please try again.
+              </p>
+              <button
+                onClick={() => setStatus("idle")}
+                className="mt-6 inline-flex items-center justify-center gap-2 font-semibold rounded-full px-8 py-3 text-sm bg-white/10 border border-white/20 text-white hover:bg-white/20 transition-all duration-300 cursor-pointer"
+              >
+                Try Again
+              </button>
             </motion.div>
           ) : (
             <motion.div

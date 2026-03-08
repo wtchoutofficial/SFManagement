@@ -88,6 +88,7 @@ export function Navbar() {
             ? "bg-surface/95 backdrop-blur-lg"
             : "bg-background md:bg-transparent"
         }`}
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
           {/* Left — Logo */}

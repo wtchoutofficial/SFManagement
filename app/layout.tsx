@@ -51,7 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${plusJakarta.variable} ${prompt.variable}`}>
       <body className="font-sans">
-        <Script id="scroll-top" strategy="beforeInteractive">{`if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);window.addEventListener("beforeunload",function(){window.scrollTo(0,0)});`}</Script>
+        <Script id="scroll-top" strategy="beforeInteractive">{`if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);document.addEventListener("DOMContentLoaded",function(){window.scrollTo(0,0)});window.addEventListener("pageshow",function(e){if(e.persisted)window.scrollTo(0,0)});window.addEventListener("beforeunload",function(){window.scrollTo(0,0)});`}</Script>
         {children}
       </body>
     </html>

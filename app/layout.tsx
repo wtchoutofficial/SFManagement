@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     title: "SF Management — Premium Creator Management Agency",
     description:
       "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
-    images: [{ url: "/sf-crown.png" }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
     siteName: "SF Management",
   },
   twitter: {
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     title: "SF Management — Premium Creator Management Agency",
     description:
       "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
-    images: ["/sf-crown.png"],
+    images: ["/og-image.png"],
   },
 };
 

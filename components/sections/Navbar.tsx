@@ -83,12 +83,11 @@ export function Navbar() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed -top-20 left-0 right-0 z-50 pt-20 md:top-0 md:pt-0 transition-all duration-300 ${
           scrolled
             ? "bg-[#111118] md:bg-surface/95 backdrop-blur-lg"
             : "bg-background md:bg-transparent"
         }`}
-        style={{ top: "calc(-1 * env(safe-area-inset-top, 0px) - 2rem)", paddingTop: "calc(env(safe-area-inset-top, 0px) + 2rem)" }}
       >
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
           {/* Left — Logo */}

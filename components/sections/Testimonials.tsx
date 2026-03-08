@@ -65,8 +65,8 @@ function Sparkline({ data, id }: SparklineProps) {
     >
       <defs>
         <linearGradient id={`spark-fill-${id}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
         </linearGradient>
       </defs>
       <polygon
@@ -78,7 +78,7 @@ function Sparkline({ data, id }: SparklineProps) {
       <polyline
         points={polyline}
         fill="none"
-        stroke="var(--color-accent)"
+        stroke="#22c55e"
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -95,7 +95,7 @@ function Sparkline({ data, id }: SparklineProps) {
           cy={p.y}
           r="3"
           fill="var(--color-background)"
-          stroke="var(--color-accent)"
+          stroke="#22c55e"
           strokeWidth="1.5"
           opacity={show ? 1 : 0}
           style={{ transition: `opacity 0.3s ease ${dur * 0.6 + i * 0.08}s` }}
@@ -130,11 +130,11 @@ const caseStudies: CaseStudy[] = [
   {
     label: "Creator B",
     headlinePrefix: "$",
-    headlineValue: 56.9,
+    headlineValue: 94.4,
     headlineSuffix: "K",
     subtitle: "Peak month revenue",
-    badge: "+52.2% Dec growth",
-    sparkData: [12, 19.8, 36.7, 56.9],
+    badge: "+82% monthly growth",
+    sparkData: [18, 32, 45, 52, 68, 94.4],
   },
   {
     label: "Creator C",
@@ -147,12 +147,12 @@ const caseStudies: CaseStudy[] = [
   },
   {
     label: "Creator D",
-    headlinePrefix: "+",
-    headlineValue: 195,
-    headlineSuffix: "%",
-    subtitle: "3-month growth",
-    badge: "From zero to $33.5K",
-    sparkData: [2, 8, 18, 33.5],
+    headlinePrefix: "$",
+    headlineValue: 56.9,
+    headlineSuffix: "K",
+    subtitle: "Peak month revenue",
+    badge: "+52.2% Dec growth",
+    sparkData: [12, 19.8, 36.7, 56.9],
   },
 ];
 
@@ -191,7 +191,7 @@ export function Testimonials() {
                 </p>
 
                 <Sparkline data={cs.sparkData} id={cs.label.replace(/\s/g, "")} />
-                <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-accent/10 text-accent text-[10px] md:text-xs font-medium w-fit">
+                <span className="inline-flex items-center gap-1.5 mt-3 px-2.5 py-1 rounded-full bg-green-500/10 text-green-400 text-[10px] md:text-xs font-medium w-fit">
                   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden>
                     <path d="M5 8V2M5 2L2.5 4.5M5 2L7.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>

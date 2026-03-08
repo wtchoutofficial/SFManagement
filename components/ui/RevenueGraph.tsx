@@ -81,8 +81,8 @@ export function RevenueGraph({ data, className = "" }: RevenueGraphProps) {
     >
       <defs>
         <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-accent)" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="var(--color-accent)" stopOpacity="0" />
+          <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -134,7 +134,7 @@ export function RevenueGraph({ data, className = "" }: RevenueGraphProps) {
       <polyline
         points={polylinePoints}
         fill="none"
-        stroke="var(--color-accent)"
+        stroke="#22c55e"
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -153,7 +153,7 @@ export function RevenueGraph({ data, className = "" }: RevenueGraphProps) {
           cy={p.y}
           r="4"
           fill="var(--color-background)"
-          stroke="var(--color-accent)"
+          stroke="#22c55e"
           strokeWidth="2"
           opacity={showAnimation ? 1 : 0}
           style={{

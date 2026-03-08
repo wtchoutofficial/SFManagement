@@ -21,6 +21,7 @@ function FloatingInput({
   required = false,
   value,
   onChange,
+  inputMode,
 }: {
   label: string;
   type?: string;

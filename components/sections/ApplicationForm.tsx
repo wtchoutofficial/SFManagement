@@ -299,14 +299,14 @@ export function ApplicationForm() {
                         onChange={setEmail}
                       />
                       <FloatingInput
-                        label="Instagram @handle"
+                        label="@instagram"
                         type="text"
                         required
                         value={handle}
                         onChange={setHandle}
                       />
                       <FloatingInput
-                        label="TikTok @handle (optional)"
+                        label="@tiktok (optional)"
                         type="text"
                         value={tiktok}
                         onChange={setTiktok}

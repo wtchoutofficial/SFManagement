@@ -27,6 +27,7 @@ function FloatingInput({
   required?: boolean;
   value: string;
   onChange: (v: string) => void;
+  inputMode?: "text" | "email" | "tel" | "numeric";
 }) {
   const [focused, setFocused] = useState(false);
   const isActive = focused || value.length > 0;
@@ -52,6 +53,7 @@ function FloatingInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
+        inputMode={inputMode}
         className="w-full bg-transparent border border-surface-light rounded-lg px-4 pt-5 pb-2 text-white focus:outline-none focus:border-white focus:ring-1 focus:ring-white focus:bg-white/[0.02] transition-all duration-300"
       />
     </div>
@@ -355,7 +357,8 @@ export function ApplicationForm() {
                             type="tel"
                             required
                             value={phone}
-                            onChange={setPhone}
+                            onChange={(v) => setPhone(v.replace(/[^0-9]/g, ""))}
+                            inputMode="numeric"
                           />
                         </div>
                       </div>

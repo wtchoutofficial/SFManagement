@@ -222,7 +222,7 @@ export function ApplicationForm() {
                 }}
               >
                 <svg
-                  className="w-16 h-16 text-white mx-auto mb-6"
+                  className="w-16 h-16 text-green-500 mx-auto mb-6"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"

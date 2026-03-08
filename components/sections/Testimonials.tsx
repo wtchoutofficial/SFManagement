@@ -138,21 +138,21 @@ const caseStudies: CaseStudy[] = [
   },
   {
     label: "Creator C",
-    headlinePrefix: "+",
-    headlineValue: 289,
-    headlineSuffix: "%",
-    subtitle: "Revenue growth",
-    badge: "$20.5K in 6 weeks",
-    sparkData: [1.2, 4.5, 10, 16, 20.5],
-  },
-  {
-    label: "Creator D",
     headlinePrefix: "$",
     headlineValue: 56.9,
     headlineSuffix: "K",
     subtitle: "Peak month revenue",
     badge: "+52.2% Dec growth",
     sparkData: [12, 19.8, 36.7, 56.9],
+  },
+  {
+    label: "Creator D",
+    headlinePrefix: "+",
+    headlineValue: 289,
+    headlineSuffix: "%",
+    subtitle: "Revenue growth",
+    badge: "$20.5K in 6 weeks",
+    sparkData: [1.2, 4.5, 10, 16, 20.5],
   },
 ];
 

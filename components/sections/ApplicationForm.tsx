@@ -192,7 +192,7 @@ export function ApplicationForm() {
             <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
           </span>
           <span className="text-sm text-muted">
-            We&apos;re currently accepting 3 new creators this month
+            Only accepting 1 new creator this month
           </span>
         </div>
 

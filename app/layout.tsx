@@ -15,6 +15,12 @@ const prompt = Prompt({
   display: "swap",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export const metadata: Metadata = {
   title: "SF Management — Premium Creator Management Agency",
   description:

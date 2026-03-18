@@ -19,6 +19,21 @@ html {
   --font-heading: var(--font-space-grotesk), system-ui, sans-serif;
 }
 
+/* Navbar safe area — CSS env() is more reliable than inline style on iOS Safari */
+.navbar-safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.navbar-safe-top::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 0px);
+  background-color: #0B0B0F;
+}
+
 @layer base {
   body {
     background-color: var(--color-background);
@@ -45,7 +60,10 @@ html {
     body::after {
       content: "";
       position: fixed;
-      inset: 0;
+      top: env(safe-area-inset-top, 0px);
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 0;
       pointer-events: none;
       background:

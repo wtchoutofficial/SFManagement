@@ -24,16 +24,6 @@ html {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-.navbar-safe-top::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: env(safe-area-inset-top, 0px);
-  background-color: #0B0B0F;
-}
-
 @layer base {
   body {
     background-color: var(--color-background);

@@ -79,71 +79,75 @@ export function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      {/* Fixed wrapper — extends above viewport to physically cover safe area */}
+      <div
+        className={`fixed left-0 right-0 z-50 transition-colors duration-300 ${
           scrolled
-            ? "bg-surface/95 backdrop-blur-lg"
+            ? "bg-surface backdrop-blur-lg"
             : "bg-background md:bg-transparent"
         }`}
-        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        style={{ top: '-100px', paddingTop: 'calc(100px + env(safe-area-inset-top, 0px))' }}
       >
-        <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
-          {/* Left — Logo */}
-          <a href="#home" className="flex items-center gap-3 font-bold text-text transition-all duration-300 font-heading">
-            <Image src="/sf-crown.png" alt="SF Management" width={40} height={40} priority className="h-10 w-auto" />
-            <span className="text-lg whitespace-nowrap">SF Management</span>
-          </a>
-
-          {/* Center — Nav links */}
-          <div className="hidden md:flex items-center justify-center gap-16">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-lg text-text hover:text-accent transition-colors whitespace-nowrap"
-              >
-                {link.label}
-              </a>
-            ))}
-          </div>
-
-          {/* Right — CTA */}
-          <div className="hidden md:flex justify-end">
-            <a href="#apply">
-              <Button>Secure Your Spot</Button>
+        <motion.nav
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+        >
+          <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
+            {/* Left — Logo */}
+            <a href="#home" className="flex items-center gap-3 font-bold text-text transition-all duration-300 font-heading">
+              <Image src="/sf-crown.png" alt="SF Management" width={40} height={40} priority className="h-10 w-auto" />
+              <span className="text-lg whitespace-nowrap">SF Management</span>
             </a>
-          </div>
 
-          {/* Hamburger */}
-          <button
-            ref={buttonRef}
-            className="md:hidden flex flex-col gap-1.5 p-2 col-start-3 justify-self-end"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
-          >
-            <span
-              className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
-                mobileOpen ? "rotate-45 translate-y-2" : ""
-              }`}
-            />
-            <span
-              className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
-                mobileOpen ? "opacity-0 scale-x-0" : ""
-              }`}
-            />
-            <span
-              className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
-                mobileOpen ? "-rotate-45 -translate-y-2" : ""
-              }`}
-            />
-          </button>
-        </div>
-        {scrolled && <div className="gradient-divider" />}
-      </motion.nav>
+            {/* Center — Nav links */}
+            <div className="hidden md:flex items-center justify-center gap-16">
+              {navLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-lg text-text hover:text-accent transition-colors whitespace-nowrap"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+
+            {/* Right — CTA */}
+            <div className="hidden md:flex justify-end">
+              <a href="#apply">
+                <Button>Secure Your Spot</Button>
+              </a>
+            </div>
+
+            {/* Hamburger */}
+            <button
+              ref={buttonRef}
+              className="md:hidden flex flex-col gap-1.5 p-2 col-start-3 justify-self-end"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+            >
+              <span
+                className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
+                  mobileOpen ? "rotate-45 translate-y-2" : ""
+                }`}
+              />
+              <span
+                className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
+                  mobileOpen ? "opacity-0 scale-x-0" : ""
+                }`}
+              />
+              <span
+                className={`w-6 h-0.5 bg-text origin-center transition-all duration-300 ${
+                  mobileOpen ? "-rotate-45 -translate-y-2" : ""
+                }`}
+              />
+            </button>
+          </div>
+          {scrolled && <div className="gradient-divider" />}
+        </motion.nav>
+      </div>
 
       {/* Mobile dropdown menu */}
       <AnimatePresence>
@@ -154,7 +158,8 @@ export function Navbar() {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className="fixed top-20 left-0 right-0 z-40 bg-surface/95 overflow-hidden md:hidden"
+            className="fixed left-0 right-0 z-40 bg-surface/95 overflow-hidden md:hidden"
+            style={{ top: 'calc(5rem + env(safe-area-inset-top, 0px))' }}
           >
             <div className="flex flex-col px-6 py-4">
               {navLinks.map((link, i) => (

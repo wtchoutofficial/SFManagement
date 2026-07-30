@@ -78,6 +78,7 @@
     font-size:11.5px; color:var(--gold); opacity:0; transition:opacity .4s; min-width:58px;
   }
   .actions .saved.on{opacity:1}
+  .actions .saved.warnp{opacity:1; color:var(--amber)}
   .btn{
     background:var(--btn); border:1px solid var(--btn-line); border-radius:9px;
     padding:6px 11px; cursor:pointer; font-size:13px;
@@ -246,6 +247,9 @@
     <button class="btn" id="addDoor">+ Dør</button>
     <button class="btn" id="rotRoom" title="Vri hele lokalet 90° – bordene følger med">Snu rommet</button>
     <button class="btn" id="printBtn">Skriv ut</button>
+    <button class="btn" id="dlBtn" title="Last ned en sikkerhetskopi av bordkartet (.json)">Last ned</button>
+    <button class="btn" id="upBtn" title="Hent inn et bordkart fra en nedlastet fil">Hent inn</button>
+    <input type="file" id="upFile" accept=".json,application/json" hidden>
     <button class="btn warn" id="resetBtn">Nullstill</button>
     <span class="saved" id="saved">Lagret ✓</span>
   </div>
@@ -358,8 +362,9 @@ try{
 if(!state)state=defaultState();
 function cur(){return state.sketches[state.active]}
 function room(){var c=cur();if(!c.room)c.room={w:VB.w,h:VB.h};return c.room}
-/* migrate older saved layouts: room dims, door, and re-clamp everything into the room */
-(function(){
+/* migrate older/imported layouts: room dims, door, and re-clamp everything into the room */
+function migrateState(){
+  if(!state.sketches[state.active])state.active=Object.keys(state.sketches)[0];
   var act=state.active,keys=Object.keys(state.sketches),k,i;
   for(k=0;k<keys.length;k++){
     state.active=keys[k];
@@ -370,7 +375,8 @@ function room(){var c=cur();if(!c.room)c.room={w:VB.w,h:VB.h};return c.room}
     for(i=0;i<sk.tables.length;i++)clampT(sk.tables[i]);
   }
   state.active=act;
-})();
+}
+migrateState();
 
 var svg=document.getElementById("floor");
 var side=document.getElementById("side");
@@ -384,11 +390,27 @@ var savedTimer=null;
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 function getT(id){var ts=cur().tables;for(var i=0;i<ts.length;i++)if(ts[i].id===id)return ts[i];return null}
 
-function save(){
-  try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}
+var canStore=false;
+try{
+  localStorage.setItem("bkd-probe","1");
+  canStore=localStorage.getItem("bkd-probe")==="1";
+  localStorage.removeItem("bkd-probe");
+}catch(e){}
+function syncSavedBase(){
+  if(!canStore){savedEl.textContent="⚠ Lagres ikke her – bruk Last ned";savedEl.classList.add("warnp");}
+  else{savedEl.textContent="Lagret ✓";savedEl.classList.remove("warnp");}
+}
+function flash(msg){
+  savedEl.textContent=msg;
   savedEl.classList.add("on");
   clearTimeout(savedTimer);
-  savedTimer=setTimeout(function(){savedEl.classList.remove("on")},1100);
+  savedTimer=setTimeout(function(){savedEl.classList.remove("on");syncSavedBase();},1400);
+}
+function save(){
+  if(!canStore)return;
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state));}
+  catch(e){canStore=false;syncSavedBase();return;}
+  flash("Lagret ✓");
 }
 function commit(){save();render()}
 
@@ -869,6 +891,51 @@ document.getElementById("addDoor").addEventListener("click",function(){
   var t={id:"t"+(state.seq++),type:"door",name:"Dør",x:R.w-10,y:Math.round(R.h/2),r:0};
   clampT(t);cur().tables.push(t);commit();
 });
+function exportJSON(){
+  return JSON.stringify({app:"bordkart-daap",exported:new Date().toISOString(),state:state});
+}
+function blobDownload(name,data){
+  var a=document.createElement("a");
+  var u=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(u);a.remove();},2000);
+}
+document.getElementById("dlBtn").addEventListener("click",function(){
+  var name="bordkart-daap-"+new Date().toISOString().slice(0,10)+".json";
+  var data=exportJSON();
+  if(window.claude&&window.claude.downloads){
+    window.claude.downloads.save({filename:name,data:data})
+      .then(function(){flash("Lastet ned ✓");})
+      .catch(function(err){
+        if(err&&err.code==="declined")return;
+        blobDownload(name,data);
+      });
+  }else{
+    blobDownload(name,data);
+    flash("Lastet ned ✓");
+  }
+});
+document.getElementById("upBtn").addEventListener("click",function(){
+  document.getElementById("upFile").click();
+});
+document.getElementById("upFile").addEventListener("change",function(e){
+  var f=e.target.files&&e.target.files[0];
+  e.target.value="";
+  if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var j=JSON.parse(r.result);
+      var st=j&&j.state?j.state:j;
+      if(!(st&&st.v===3&&st.sketches))throw new Error("bad");
+      state=st;migrateState();closePop();save();render();
+      flash("Hentet inn ✓");
+    }catch(err){
+      alert("Kunne ikke lese filen – er dette en nedlastet bordkart-fil (.json)?");
+    }
+  };
+  r.readAsText(f);
+});
 document.getElementById("printBtn").addEventListener("click",function(){window.print()});
 document.getElementById("resetBtn").addEventListener("click",function(){
   if(confirm("Nullstille begge skissene til det opprinnelige forslaget? Endringene dine slettes.")){
@@ -877,6 +944,8 @@ document.getElementById("resetBtn").addEventListener("click",function(){
   }
 });
 
+syncSavedBase();
+if(!canStore)savedEl.classList.add("on");
 render();
 })();
 </script>

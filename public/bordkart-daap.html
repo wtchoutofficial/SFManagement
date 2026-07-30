@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="no">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bordkart – dåp 🎀</title>
+<style>
+  :root{
+    --paper:#FBF5F2; --floor:#FFFDFB; --floorline:#EBD8DA; --grid:#F2E4E3;
+    --ink:#4A363C; --muted:#9A7E85; --rose:#BE5876; --rose-soft:#E7B9C6;
+    --blush:#F8E1E7; --blush-stroke:#D0899D; --blush-ink:#5C3A44;
+    --gold:#B8933F; --goldfill:#F4E4BF; --gold-ink:#5F4A1A;
+    --amber:#B27C2A; --amberfill:#FAEDD6;
+    --wood:#F1E7DA; --woodline:#D6C3A8; --wood-ink:#77603E;
+    --panel:#FFFFFF; --panel-line:#EDDCDE; --chipbg:#F8E1E7;
+    --btn:#FFFFFF; --btn-line:#E3CCCF; --pri-ink:#FFFFFF; --shadow:0 10px 30px rgba(120,60,80,.10);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --paper:#221B1E; --floor:#2B2327; --floorline:#4A393E; --grid:#352A2E;
+      --ink:#F1E2E2; --muted:#B49AA1; --rose:#E08BA3; --rose-soft:#7A4A58;
+      --blush:#4A323B; --blush-stroke:#C67D93; --blush-ink:#F6DEE5;
+      --gold:#DDB56A; --goldfill:#453823; --gold-ink:#F0DCAE;
+      --amber:#E0A952; --amberfill:#453823;
+      --wood:#3A322D; --woodline:#6A5A45; --wood-ink:#D8C29A;
+      --panel:#2B2327; --panel-line:#4A393E; --chipbg:#4A323B;
+      --btn:#332A2E; --btn-line:#544248; --pri-ink:#2B1520; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"]{
+    --paper:#FBF5F2; --floor:#FFFDFB; --floorline:#EBD8DA; --grid:#F2E4E3;
+    --ink:#4A363C; --muted:#9A7E85; --rose:#BE5876; --rose-soft:#E7B9C6;
+    --blush:#F8E1E7; --blush-stroke:#D0899D; --blush-ink:#5C3A44;
+    --gold:#B8933F; --goldfill:#F4E4BF; --gold-ink:#5F4A1A;
+    --amber:#B27C2A; --amberfill:#FAEDD6;
+    --wood:#F1E7DA; --woodline:#D6C3A8; --wood-ink:#77603E;
+    --panel:#FFFFFF; --panel-line:#EDDCDE; --chipbg:#F8E1E7;
+    --btn:#FFFFFF; --btn-line:#E3CCCF; --pri-ink:#FFFFFF; --shadow:0 10px 30px rgba(120,60,80,.10);
+  }
+  :root[data-theme="dark"]{
+    --paper:#221B1E; --floor:#2B2327; --floorline:#4A393E; --grid:#352A2E;
+    --ink:#F1E2E2; --muted:#B49AA1; --rose:#E08BA3; --rose-soft:#7A4A58;
+    --blush:#4A323B; --blush-stroke:#C67D93; --blush-ink:#F6DEE5;
+    --gold:#DDB56A; --goldfill:#453823; --gold-ink:#F0DCAE;
+    --amber:#E0A952; --amberfill:#453823;
+    --wood:#3A322D; --woodline:#6A5A45; --wood-ink:#D8C29A;
+    --panel:#2B2327; --panel-line:#4A393E; --chipbg:#4A323B;
+    --btn:#332A2E; --btn-line:#544248; --pri-ink:#2B1520; --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper); color:var(--ink);
+    font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  button{font:inherit;color:inherit}
+
+  .top{
+    display:flex; flex-wrap:wrap; align-items:center; gap:12px 22px;
+    padding:14px 20px 10px;
+  }
+  .brand{display:flex; align-items:baseline; gap:10px}
+  .brand h1{
+    margin:0; font:italic 600 24px/1.1 "Iowan Old Style",Georgia,"Times New Roman",serif;
+    color:var(--rose); letter-spacing:.2px;
+  }
+  .brand .bow{font-size:19px}
+  .sub{margin:2px 0 0; color:var(--muted); font-size:12.5px}
+  .stats{
+    display:flex; flex-wrap:wrap; align-items:center; gap:4px 0;
+    font-variant-numeric:tabular-nums; color:var(--muted); font-size:12.5px;
+    margin-left:auto;
+  }
+  .stats b{color:var(--ink); font-weight:650}
+  .stats span+span::before{content:"·"; margin:0 8px; color:var(--rose-soft)}
+  .actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .actions .saved{
+    font-size:11.5px; color:var(--gold); opacity:0; transition:opacity .4s; min-width:58px;
+  }
+  .actions .saved.on{opacity:1}
+  .btn{
+    background:var(--btn); border:1px solid var(--btn-line); border-radius:9px;
+    padding:6px 11px; cursor:pointer; font-size:13px;
+  }
+  .btn:hover{border-color:var(--rose)}
+  .btn.warn:hover{border-color:var(--amber); color:var(--amber)}
+  :focus-visible{outline:2px solid var(--rose); outline-offset:2px; border-radius:6px}
+
+  .app{display:flex; gap:14px; padding:0 20px 20px; align-items:flex-start}
+  .stage{
+    flex:1; overflow:auto; background:var(--floor);
+    border:1.5px solid var(--floorline); border-radius:16px; box-shadow:var(--shadow);
+  }
+  #floor{display:block; width:1250px; max-width:none; user-select:none}
+
+  /* ---------- SVG ---------- */
+  .room{fill:var(--floor)}
+  .roomlab{fill:var(--muted); font-size:11px; font-style:italic}
+  .tbl-body{fill:var(--wood); stroke:var(--woodline); stroke-width:2; stroke-linejoin:round; cursor:grab}
+  .tbl-label{fill:var(--wood-ink); font-weight:650; font-size:12.5px; text-anchor:middle; cursor:grab}
+  .tbl-count{fill:var(--wood-ink); opacity:.75; font-size:10px; text-anchor:middle; cursor:grab; font-variant-numeric:tabular-nums}
+  .tbl.dragging .tbl-body{cursor:grabbing}
+  .seat{cursor:pointer}
+  .seat circle{fill:var(--blush); stroke:var(--blush-stroke); stroke-width:1.6}
+  .seat text{fill:var(--blush-ink); text-anchor:middle; font-weight:600; pointer-events:none}
+  .seat.vert circle{fill:var(--goldfill); stroke:var(--gold)}
+  .seat.vert text{fill:var(--gold-ink)}
+  .seat.usikker circle{fill:var(--amberfill); stroke:var(--amber); stroke-dasharray:4 3}
+  .seat .q{fill:var(--amber); font-size:11px; font-weight:800}
+  .seat.ledig circle{fill:transparent; stroke:var(--floorline); stroke-dasharray:4 3; stroke-width:1.4}
+  .seat.ledig text{fill:var(--muted); font-weight:500; font-style:italic}
+  .seat.drop circle{stroke:var(--rose); stroke-width:3; stroke-dasharray:none}
+  .seat.src{opacity:.35}
+  @media (prefers-reduced-motion: no-preference){
+    .seat circle{transition:stroke .12s, stroke-width .12s}
+  }
+
+  /* ---------- sidebar ---------- */
+  .side{width:300px; flex:none; display:flex; flex-direction:column; gap:12px}
+  .panel{
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:14px;
+    padding:12px 14px; box-shadow:var(--shadow);
+  }
+  .panel h2, .panel summary{
+    margin:0; font-size:11.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--ink);
+  }
+  .panel h2 .cnt, .panel summary .cnt{color:var(--rose); font-variant-numeric:tabular-nums}
+  .panel .hint{margin:5px 0 0; font-size:11.5px; color:var(--muted)}
+  .panel.dropzone{border-color:var(--rose); border-style:dashed}
+  .chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:10px}
+  .chips:empty{margin-top:0}
+  .chip{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--chipbg); color:var(--blush-ink);
+    border:1px solid var(--blush-stroke); border-radius:999px;
+    padding:4px 11px; font-size:12.5px; font-weight:600; cursor:grab; user-select:none;
+  }
+  .chip.usikker{background:var(--amberfill); border-color:var(--amber); border-style:dashed; color:var(--ink)}
+  .chip .qb{color:var(--amber); font-weight:800}
+  .chip .x{
+    border:0; background:none; padding:0 0 0 2px; cursor:pointer;
+    color:var(--muted); font-size:13px; line-height:1;
+  }
+  .chip .x:hover{color:var(--rose)}
+  details.panel .chips .chip{opacity:.62; cursor:grab}
+  details.panel summary{cursor:pointer; list-style-position:outside}
+  .empty{margin:8px 0 0; font-size:12px; color:var(--muted); font-style:italic}
+
+  .legend{font-size:12px}
+  .legend ul{list-style:none; margin:9px 0 0; padding:0; display:grid; gap:7px}
+  .legend li{display:flex; align-items:center; gap:9px; color:var(--muted)}
+  .sw{width:17px; height:17px; border-radius:50%; flex:none}
+  .sw.g{background:var(--goldfill); border:1.6px solid var(--gold)}
+  .sw.r{background:var(--blush); border:1.6px solid var(--blush-stroke)}
+  .sw.u{background:var(--amberfill); border:1.6px dashed var(--amber)}
+  .sw.l{background:transparent; border:1.6px dashed var(--floorline)}
+  .sw.w{background:var(--wood); border:1.6px solid var(--woodline); border-radius:5px}
+
+  /* ---------- popover & ghost ---------- */
+  #pop{
+    position:fixed; z-index:40; width:236px;
+    background:var(--panel); border:1px solid var(--panel-line); border-radius:13px;
+    box-shadow:var(--shadow); padding:11px;
+  }
+  #pop input{
+    width:100%; background:var(--paper); color:var(--ink);
+    border:1px solid var(--btn-line); border-radius:8px; padding:7px 9px; font:inherit;
+  }
+  #pop input:focus{border-color:var(--rose); outline:none}
+  .pseg{display:flex; gap:5px; margin-top:8px}
+  .pseg button{
+    flex:1; background:var(--btn); border:1px solid var(--btn-line); border-radius:8px;
+    padding:5px 2px; font-size:11.5px; cursor:pointer; color:var(--muted);
+  }
+  .pseg button.on{border-color:var(--rose); color:var(--rose); font-weight:700}
+  .prow2{display:flex; gap:6px; margin-top:9px}
+  .prow2 .sp{flex:1}
+  .pri{
+    background:var(--rose); border:1px solid var(--rose); color:var(--pri-ink);
+    border-radius:8px; padding:6px 13px; cursor:pointer; font-weight:650;
+  }
+  .ghostbtn{background:none; border:1px solid var(--btn-line); border-radius:8px; padding:6px 10px; cursor:pointer; color:var(--muted)}
+  .ghostbtn:hover{border-color:var(--amber); color:var(--amber)}
+  #ghost{
+    position:fixed; z-index:50; pointer-events:none; transform:translate(-50%,-120%);
+    background:var(--rose); color:var(--pri-ink); font-size:12.5px; font-weight:650;
+    border-radius:999px; padding:5px 12px; box-shadow:var(--shadow);
+  }
+  .chip.dragging{opacity:.4}
+
+  @media (max-width:940px){
+    .app{flex-direction:column; align-items:stretch}
+    .stage{width:100%; max-width:100%}
+    .side{width:100%}
+    .stats{margin-left:0; width:100%}
+  }
+
+  @media print{
+    @page{size:A4 landscape; margin:9mm}
+    :root, :root[data-theme="dark"]{
+      --paper:#fff; --floor:#fff; --floorline:#bbb; --grid:#eee; --ink:#222; --muted:#666;
+      --rose:#a34560; --rose-soft:#caa; --blush:#f6e3e8; --blush-stroke:#b98; --blush-ink:#333;
+      --gold:#9a7a30; --goldfill:#f2e6c8; --gold-ink:#5a4515; --amber:#996a20; --amberfill:#f6ecd8;
+      --wood:#f2ecdf; --woodline:#b8a88a; --wood-ink:#6a5530; --shadow:none;
+    }
+    .actions,.side,.sub{display:none!important}
+    .app{display:block; padding:0 8px}
+    .top{padding:4px 8px}
+    .stage{overflow:visible; border-color:#ccc; box-shadow:none}
+    #floor{width:100%}
+  }
+</style>
+
+<header class="top">
+  <div class="brand">
+    <span class="bow">🎀</span>
+    <div>
+      <h1>Bordkart · Dåp</h1>
+      <p class="sub">Trykk på en plass for å endre navn · dra navn mellom plasser · dra bordene dit du vil – alt lagres i nettleseren</p>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="actions">
+    <button class="btn" id="addRound">+ Rundbord</button>
+    <button class="btn" id="addRect">+ Småbord</button>
+    <button class="btn" id="printBtn">Skriv ut</button>
+    <button class="btn warn" id="resetBtn">Nullstill</button>
+    <span class="saved" id="saved">Lagret ✓</span>
+  </div>
+</header>
+
+<div class="app">
+  <div class="stage" id="stage">
+    <svg id="floor" viewBox="0 0 1250 800" xmlns="http://www.w3.org/2000/svg" aria-label="Plantegning av lokalet"></svg>
+  </div>
+
+  <aside class="side" id="side">
+    <section class="panel" id="unplacedPanel">
+      <h2>Ikke plassert <span class="cnt" id="cntUnplaced"></span></h2>
+      <p class="hint">Dra et navn hit for å ta noen av bordet – og dra herfra til en ledig plass.</p>
+      <div class="chips" data-pool="unplaced"></div>
+      <p class="empty" id="emptyUnplaced">Alle middagsgjestene har fått plass ✨</p>
+    </section>
+
+    <section class="panel">
+      <h2>Kaffe &amp; kake <span class="cnt" id="cntCoffee"></span></h2>
+      <p class="hint">Kommer til kaken (20 stk i notatet). Dra inn på en plass ved behov.</p>
+      <div class="chips" data-pool="coffee"></div>
+    </section>
+
+    <details class="panel">
+      <summary>Kommer ikke <span class="cnt" id="cntNo"></span></summary>
+      <div class="chips" data-pool="no"></div>
+    </details>
+
+    <section class="panel legend">
+      <h2>Tegnforklaring</h2>
+      <ul>
+        <li><span class="sw g"></span>Vertskap / dåpsbarn</li>
+        <li><span class="sw r"></span>Middagsgjest</li>
+        <li><span class="sw u"></span>Usikker (?)</li>
+        <li><span class="sw l"></span>Ledig plass – 4 stk til barna</li>
+        <li><span class="sw w"></span>Bord – dra for å flytte, trykk for å endre navn</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<div id="pop" hidden></div>
+<div id="ghost" hidden></div>
+
+<script>
+(function(){
+"use strict";
+var LS_KEY="bordkart-daap-v1";
+var HS={W:242,H:500,d:46};
+var VB={w:1250,h:800};
+
+function S(n,s){return{n:n,s:s||"ok"}}
+function defaultState(){
+  return {
+    v:1, seq:10,
+    tables:[
+      {id:"hs",type:"hs",name:"Hestesko",x:80,y:100,seats:[
+        S("Mamma","vert"),S("Signe","vert"),S("Pappa","vert"),
+        S("Elise"),S("Kornelia"),S("Joakim"),S("Kathrine"),S("Terje"),S("Roy"),S("Maya"),S("Helene"),S("Hanne"),S("Paul"),
+        S("Oscar"),S("Sander","usikker"),S("Malin","usikker"),S("Hilde"),S("Robert"),S("Emma"),S("Sigurd"),S("Elise"),S("Oliver"),S("Frida")
+      ]},
+      {id:"r1",type:"round",name:"Rundbord 1",x:660,y:235,seats:[
+        S("Julie"),S("Bodil"),S("Kåre"),S("Unni"),S("Alf"),S("Britt Sissel"),S("Solrun"),S("Ivar")
+      ]},
+      {id:"r2",type:"round",name:"Rundbord 2",x:960,y:235,seats:[
+        S("Mary"),S("Jarle"),S("Einar"),S("Ragnhild"),S("Lena"),S("Isabella"),S("Geir Erling"),S("Lars")
+      ]},
+      {id:"r3",type:"round",name:"Rundbord 3",x:810,y:540,seats:[
+        S("Alf Magne"),S("Anita"),S("Nils"),S("Nina"),S(""),S(""),S(""),S("")
+      ]},
+      {id:"kake",type:"rect",name:"Kakebord 🎂",x:470,y:706,w:220,h:60},
+      {id:"avl",type:"rect",name:"Avlastningsbord",x:940,y:706,w:200,h:60}
+    ],
+    pools:{
+      unplaced:[],
+      coffee:[S("Mathea"),S("Alfred"),S("Andrea"),S("Kobe"),S("Thale"),S("Adrian"),S("Brage"),S("Mathias"),S("Even"),S("Viktoria"),S("Sivert","usikker"),S("Maria"),S("Sarah"),S("Nichlas"),S("Birgit")],
+      no:[S("Vegard"),S("Remi"),S("Kim"),S("Mirasol"),S("Tanja","usikker"),S("Geir Morten"),S("Linnea"),S("Sanna"),S("Tiril"),S("Becky"),S("Sandra"),S("Elise"),S("Anna"),S("Knut Asgeir"),S("Emilie")]
+    }
+  };
+}
+
+var state=null;
+try{
+  var raw=localStorage.getItem(LS_KEY);
+  if(raw){var j=JSON.parse(raw); if(j&&j.v===1&&j.tables)state=j;}
+}catch(e){}
+if(!state)state=defaultState();
+
+var svg=document.getElementById("floor");
+var side=document.getElementById("side");
+var stage=document.getElementById("stage");
+var pop=document.getElementById("pop");
+var ghost=document.getElementById("ghost");
+var savedEl=document.getElementById("saved");
+var savedTimer=null;
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function getT(id){for(var i=0;i<state.tables.length;i++)if(state.tables[i].id===id)return state.tables[i];return null}
+
+function save(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}
+  savedEl.classList.add("on");
+  clearTimeout(savedTimer);
+  savedTimer=setTimeout(function(){savedEl.classList.remove("on")},1100);
+}
+function commit(){save();render()}
+
+/* ---------- geometry ---------- */
+function seatPts(t){
+  var p=[],i;
+  if(t.type==="hs"){
+    for(i=-1;i<=1;i++)p.push({x:HS.W/2+i*76,y:-34});
+    for(i=0;i<10;i++)p.push({x:-34,y:64+i*45});
+    for(i=0;i<10;i++)p.push({x:HS.W+34,y:64+i*45});
+  }else if(t.type==="round"){
+    var n=t.seats.length;
+    for(i=0;i<n;i++){var a=(-90+i*(360/n))*Math.PI/180;p.push({x:Math.cos(a)*92,y:Math.sin(a)*92});}
+  }
+  return p;
+}
+function hsPath(){
+  var W=HS.W,H=HS.H,d=HS.d,g=W-2*d;
+  return "M0,0 h"+W+" v"+H+" h-"+d+" v-"+(H-d)+" h-"+g+" v"+(H-d)+" h-"+d+" Z";
+}
+function clampT(t){
+  function cl(v,a,b){return Math.min(Math.max(v,a),b)}
+  if(t.type==="hs"){t.x=cl(t.x,60,VB.w-12-HS.W-60);t.y=cl(t.y,58,VB.h-12-HS.H-6);}
+  else if(t.type==="round"){t.x=cl(t.x,132,VB.w-132);t.y=cl(t.y,132,VB.h-132);}
+  else{t.x=cl(t.x,20,VB.w-20-t.w);t.y=cl(t.y,20,VB.h-20-t.h);}
+}
+
+/* ---------- rendering ---------- */
+function nameLines(n){
+  if(!n)return{lines:["Ledig"],fs:8.6};
+  var w=n.split(/\s+/),lines;
+  if(w.length>1){var h=Math.ceil(w.length/2);lines=[w.slice(0,h).join(" "),w.slice(h).join(" ")];}
+  else lines=[n];
+  var L=0;for(var i=0;i<lines.length;i++)L=Math.max(L,lines[i].length);
+  var fs=L<=5?10.5:L<=7?9.5:L<=9?8.5:L<=11?7.6:6.8;
+  return{lines:lines,fs:fs};
+}
+function seatSVG(t,i,pt){
+  var st=t.seats[i], cls="seat "+(st.n?st.s:"ledig");
+  var nl=nameLines(st.n), txt="";
+  if(nl.lines.length===1){
+    txt='<text font-size="'+nl.fs+'" y="3.5">'+esc(nl.lines[0])+"</text>";
+  }else{
+    txt='<text font-size="'+nl.fs+'"><tspan x="0" y="-1.5">'+esc(nl.lines[0])+'</tspan><tspan x="0" dy="10">'+esc(nl.lines[1])+"</tspan></text>";
+  }
+  var q=(st.n&&st.s==="usikker")?'<text class="q" x="14" y="-13">?</text>':"";
+  return '<g class="'+cls+'" data-i="'+i+'" transform="translate('+pt.x+","+pt.y+')"><circle r="22"/>'+txt+q+"</g>";
+}
+function tableSVG(t){
+  var out='<g class="tbl" data-t="'+t.id+'" transform="translate('+t.x+","+t.y+')">';
+  var filled=0,i;
+  if(t.seats)for(i=0;i<t.seats.length;i++)if(t.seats[i].n)filled++;
+  if(t.type==="hs"){
+    out+='<path class="tbl-body" d="'+hsPath()+'"/>';
+    out+='<text class="tbl-label" x="'+(HS.W/2)+'" y="20">'+esc(t.name)+"</text>";
+    out+='<text class="tbl-count" x="'+(HS.W/2)+'" y="34">'+filled+"/"+t.seats.length+"</text>";
+  }else if(t.type==="round"){
+    out+='<circle class="tbl-body" r="60"/>';
+    out+='<text class="tbl-label" y="-1">'+esc(t.name)+"</text>";
+    out+='<text class="tbl-count" y="15">'+filled+"/"+t.seats.length+"</text>";
+  }else{
+    out+='<rect class="tbl-body" width="'+t.w+'" height="'+t.h+'" rx="12"/>';
+    out+='<text class="tbl-label" x="'+(t.w/2)+'" y="'+(t.h/2+4)+'">'+esc(t.name)+"</text>";
+  }
+  var pts=seatPts(t);
+  for(i=0;i<pts.length;i++)out+=seatSVG(t,i,pts[i]);
+  return out+"</g>";
+}
+function render(){
+  var out='<defs><pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1.1" fill="var(--grid)"/></pattern></defs>';
+  out+='<rect class="room" x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18"/>';
+  out+='<rect x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18" fill="url(#dots)" stroke="var(--floorline)" stroke-width="1.5"/>';
+  for(var i=0;i<state.tables.length;i++)out+=tableSVG(state.tables[i]);
+  out+='<text class="roomlab" x="28" y="'+(VB.h-24)+'">Lokalet · skisse – dra bordene dit du vil</text>';
+  svg.innerHTML=out;
+  renderPools();renderStats();
+}
+function renderPools(){
+  var boxes=side.querySelectorAll("[data-pool]");
+  for(var b=0;b<boxes.length;b++){
+    var key=boxes[b].getAttribute("data-pool"), arr=state.pools[key], html="";
+    for(var i=0;i<arr.length;i++){
+      var g=arr[i];
+      html+='<button class="chip '+(g.s==="usikker"?"usikker":"")+'" data-pool="'+key+'" data-i="'+i+'">'+esc(g.n)
+        +(g.s==="usikker"?'<span class="qb">?</span>':"")
+        +(key==="unplaced"?'<span class="x" data-x="1" title="Fjern fra listen">×</span>':"")
+        +"</button>";
+    }
+    boxes[b].innerHTML=html;
+  }
+  document.getElementById("cntUnplaced").textContent=state.pools.unplaced.length||"";
+  document.getElementById("cntCoffee").textContent=state.pools.coffee.length;
+  document.getElementById("cntNo").textContent="("+state.pools.no.length+")";
+  document.getElementById("emptyUnplaced").style.display=state.pools.unplaced.length?"none":"";
+}
+function renderStats(){
+  var seated=0,ledige=0;
+  for(var i=0;i<state.tables.length;i++){
+    var t=state.tables[i];if(!t.seats)continue;
+    for(var k=0;k<t.seats.length;k++)t.seats[k].n?seated++:ledige++;
+  }
+  document.getElementById("stats").innerHTML=
+    "<span><b>"+seated+"</b> plassert</span><span><b>"+ledige+"</b> ledige</span>"+
+    "<span>Middag: <b>45</b> m/barn</span><span>Kaffe/kake: <b>+20</b></span><span>Totalt: <b>65</b></span>";
+}
+
+/* ---------- popovers ---------- */
+var popCtx=null;
+function closePop(){pop.hidden=true;popCtx=null}
+function placePop(anchor){
+  pop.hidden=false;
+  var r=anchor.getBoundingClientRect(),pw=236;
+  var x=Math.min(Math.max(r.left+r.width/2-pw/2,8),window.innerWidth-pw-8);
+  var y=r.bottom+9;
+  pop.style.left=x+"px";pop.style.top=y+"px";
+  var ph=pop.getBoundingClientRect().height;
+  if(y+ph>window.innerHeight-8)pop.style.top=Math.max(8,r.top-ph-9)+"px";
+}
+function openSeatPop(tid,i){
+  var t=getT(tid),st=t.seats[i];
+  popCtx={kind:"seat",tid:tid,i:i,s:st.n?st.s:"ok"};
+  pop.innerHTML=
+    '<input id="pname" placeholder="Navn (tomt = ledig plass)" value="'+esc(st.n)+'" maxlength="30">'+
+    '<div class="pseg" id="pseg">'+
+      '<button data-s="ok">Kommer</button><button data-s="usikker">Usikker</button><button data-s="vert">Vertskap</button>'+
+    "</div>"+
+    '<div class="prow2"><button class="ghostbtn" id="pclear">Tøm plass</button><span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
+  var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .seat[data-i="'+i+'"]');
+  placePop(anchor);
+  syncSeg();
+  var inp=document.getElementById("pname");
+  inp.focus();inp.select();
+}
+function syncSeg(){
+  var btns=pop.querySelectorAll("#pseg button");
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle("on",btns[i].getAttribute("data-s")===popCtx.s);
+}
+function openTablePop(tid){
+  var t=getT(tid);
+  popCtx={kind:"table",tid:tid};
+  pop.innerHTML=
+    '<input id="pname" placeholder="Navn på bordet" value="'+esc(t.name)+'" maxlength="30">'+
+    '<div class="prow2">'+(t.type!=="hs"?'<button class="ghostbtn" id="pdel">Slett bord</button>':"")+
+    '<span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
+  var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .tbl-body');
+  placePop(anchor);
+  var inp=document.getElementById("pname");
+  inp.focus();inp.select();
+}
+pop.addEventListener("click",function(e){
+  var segBtn=e.target.closest("#pseg button");
+  if(segBtn){popCtx.s=segBtn.getAttribute("data-s");syncSeg();return;}
+  if(e.target.id==="psave")doPopSave();
+  if(e.target.id==="pclear"){
+    var t=getT(popCtx.tid),st=t.seats[popCtx.i];
+    if(st.n)state.pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"});
+    t.seats[popCtx.i]={n:"",s:"ok"};
+    closePop();commit();
+  }
+  if(e.target.id==="pdel"){
+    var tt=getT(popCtx.tid);
+    if(tt.seats)for(var i=0;i<tt.seats.length;i++)if(tt.seats[i].n)state.pools.unplaced.push({n:tt.seats[i].n,s:tt.seats[i].s==="usikker"?"usikker":"ok"});
+    state.tables=state.tables.filter(function(x){return x.id!==popCtx.tid});
+    closePop();commit();
+  }
+});
+pop.addEventListener("keydown",function(e){
+  if(e.key==="Enter")doPopSave();
+  if(e.key==="Escape")closePop();
+});
+function doPopSave(){
+  if(!popCtx)return;
+  var name=document.getElementById("pname").value.trim();
+  if(popCtx.kind==="seat"){
+    var t=getT(popCtx.tid),old=t.seats[popCtx.i];
+    if(old.n&&name&&old.n!==name)state.pools.unplaced.push({n:old.n,s:old.s==="usikker"?"usikker":"ok"});
+    t.seats[popCtx.i]=name?{n:name,s:popCtx.s}:{n:"",s:"ok"};
+  }else{
+    getT(popCtx.tid).name=name||"Bord";
+  }
+  closePop();commit();
+}
+document.addEventListener("pointerdown",function(e){
+  if(!pop.hidden&&!pop.contains(e.target))closePop();
+},true);
+stage.addEventListener("scroll",closePop);
+
+/* ---------- drag & drop ---------- */
+var press=null,lastHover=null;
+function scaleF(){return svg.getBoundingClientRect().width/VB.w}
+function showGhost(n){ghost.textContent=n;ghost.hidden=false}
+function moveGhost(x,y){ghost.style.left=x+"px";ghost.style.top=y+"px"}
+function hideGhost(){ghost.hidden=true}
+function dropAt(x,y){
+  var el=document.elementFromPoint(x,y);
+  if(!el)return null;
+  var s=el.closest?el.closest(".seat"):null;
+  if(s){var g=s.closest(".tbl");return{seat:[g.getAttribute("data-t"),+s.getAttribute("data-i")],el:s};}
+  if(el.closest&&el.closest("#side"))return{pool:1};
+  return null;
+}
+function hoverHints(x,y){
+  var d=dropAt(x,y);
+  if(lastHover&&(!d||d.el!==lastHover)){lastHover.classList.remove("drop");lastHover=null;}
+  document.getElementById("unplacedPanel").classList.toggle("dropzone",!!(d&&d.pool));
+  if(d&&d.el&&d.el!==lastHover){d.el.classList.add("drop");lastHover=d.el;}
+}
+function clearHints(){
+  if(lastHover){lastHover.classList.remove("drop");lastHover=null;}
+  document.getElementById("unplacedPanel").classList.remove("dropzone");
+}
+
+svg.addEventListener("pointerdown",function(e){
+  if(e.button!==undefined&&e.button!==0)return;
+  var seat=e.target.closest(".seat");
+  var grab=e.target.closest(".tbl-body")||e.target.closest(".tbl-label")||e.target.closest(".tbl-count");
+  if(!seat&&!grab)return;
+  var g=e.target.closest(".tbl");if(!g)return;
+  press={x0:e.clientX,y0:e.clientY,moved:false,tid:g.getAttribute("data-t")};
+  if(seat){press.mode="seat";press.i=+seat.getAttribute("data-i");press.el=seat;}
+  else{press.mode="table";press.el=g;}
+  svg.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+svg.addEventListener("pointermove",function(e){
+  if(!press)return;
+  var dx=e.clientX-press.x0,dy=e.clientY-press.y0;
+  if(press.moved===false&&Math.hypot(dx,dy)>7){
+    if(press.mode==="seat"){
+      var st=getT(press.tid).seats[press.i];
+      if(!st.n){press.moved="empty";}
+      else{press.moved=true;showGhost(st.n);press.el.classList.add("src");closePop();}
+    }else{
+      press.moved=true;press.el.parentNode.appendChild(press.el);press.el.classList.add("dragging");closePop();
+    }
+  }
+  if(press.moved!==true)return;
+  if(press.mode==="table"){
+    var t=getT(press.tid),sc=scaleF();
+    press.nx=t.x+dx/sc;press.ny=t.y+dy/sc;
+    press.el.setAttribute("transform","translate("+press.nx+","+press.ny+")");
+  }else{
+    moveGhost(e.clientX,e.clientY);
+    hoverHints(e.clientX,e.clientY);
+  }
+});
+function endPress(e){
+  if(!press)return;
+  var p=press;press=null;hideGhost();clearHints();
+  if(p.moved===false||p.moved==="empty"){
+    if(p.mode==="seat")openSeatPop(p.tid,p.i);
+    else openTablePop(p.tid);
+    return;
+  }
+  if(p.mode==="table"){
+    var t=getT(p.tid);
+    if(p.nx!==undefined){t.x=p.nx;t.y=p.ny;}
+    clampT(t);commit();return;
+  }
+  var d=dropAt(e.clientX,e.clientY);
+  var src=getT(p.tid).seats[p.i];
+  if(d&&d.seat){
+    var t2=d.seat[0],i2=d.seat[1];
+    if(!(t2===p.tid&&i2===p.i)){
+      var dst=getT(t2).seats[i2];
+      getT(t2).seats[i2]={n:src.n,s:src.s};
+      getT(p.tid).seats[p.i]=dst.n?{n:dst.n,s:dst.s}:{n:"",s:"ok"};
+      commit();return;
+    }
+  }else if(d&&d.pool){
+    state.pools.unplaced.push({n:src.n,s:src.s==="usikker"?"usikker":"ok"});
+    getT(p.tid).seats[p.i]={n:"",s:"ok"};
+    commit();return;
+  }
+  render();
+}
+svg.addEventListener("pointerup",endPress);
+svg.addEventListener("pointercancel",function(){
+  if(!press)return;press=null;hideGhost();clearHints();render();
+});
+
+/* chips: drag from pools onto seats */
+var cpress=null;
+side.addEventListener("pointerdown",function(e){
+  var c=e.target.closest(".chip");if(!c)return;
+  cpress={x0:e.clientX,y0:e.clientY,moved:false,el:c,
+          pool:c.getAttribute("data-pool"),i:+c.getAttribute("data-i"),
+          onX:!!e.target.closest("[data-x]")};
+  c.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+side.addEventListener("pointermove",function(e){
+  if(!cpress)return;
+  var dx=e.clientX-cpress.x0,dy=e.clientY-cpress.y0;
+  if(!cpress.moved&&Math.hypot(dx,dy)>7){
+    cpress.moved=true;
+    showGhost(state.pools[cpress.pool][cpress.i].n);
+    cpress.el.classList.add("dragging");
+  }
+  if(cpress.moved){moveGhost(e.clientX,e.clientY);hoverHints(e.clientX,e.clientY);}
+});
+side.addEventListener("pointerup",function(e){
+  if(!cpress)return;
+  var p=cpress;cpress=null;hideGhost();clearHints();
+  p.el.classList.remove("dragging");
+  var g=state.pools[p.pool][p.i];
+  if(!p.moved){
+    if(p.onX&&p.pool==="unplaced"){state.pools.unplaced.splice(p.i,1);commit();}
+    return;
+  }
+  var d=dropAt(e.clientX,e.clientY);
+  if(d&&d.seat){
+    var t=getT(d.seat[0]),i2=d.seat[1],dst=t.seats[i2];
+    if(dst.n)state.pools.unplaced.push({n:dst.n,s:dst.s==="usikker"?"usikker":"ok"});
+    t.seats[i2]={n:g.n,s:g.s==="usikker"?"usikker":"ok"};
+    state.pools[p.pool].splice(p.i,1);
+    commit();
+  }
+});
+side.addEventListener("pointercancel",function(){
+  if(cpress){cpress.el.classList.remove("dragging");cpress=null;hideGhost();clearHints();}
+});
+
+/* ---------- toolbar ---------- */
+document.getElementById("addRound").addEventListener("click",function(){
+  var n=0;for(var i=0;i<state.tables.length;i++)if(state.tables[i].type==="round")n++;
+  var t={id:"t"+(state.seq++),type:"round",name:"Rundbord "+(n+1),
+         x:300+((state.seq*137)%650),y:280+((state.seq*89)%330),
+         seats:[S(""),S(""),S(""),S(""),S(""),S(""),S(""),S("")]};
+  clampT(t);state.tables.push(t);commit();
+});
+document.getElementById("addRect").addEventListener("click",function(){
+  var t={id:"t"+(state.seq++),type:"rect",name:"Nytt bord",w:180,h:58,
+         x:260+((state.seq*171)%600),y:300+((state.seq*97)%330)};
+  clampT(t);state.tables.push(t);commit();
+});
+document.getElementById("printBtn").addEventListener("click",function(){window.print()});
+document.getElementById("resetBtn").addEventListener("click",function(){
+  if(confirm("Nullstille bordkartet til det opprinnelige forslaget? Endringene dine slettes.")){
+    try{localStorage.removeItem(LS_KEY);}catch(e){}
+    state=defaultState();render();
+  }
+});
+
+render();
+})();
+</script>
+
+</html>

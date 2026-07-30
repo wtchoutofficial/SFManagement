@@ -247,7 +247,8 @@
     <button class="btn" id="addDoor">+ Dør</button>
     <button class="btn" id="rotRoom" title="Vri hele lokalet 90° – bordene følger med">Snu rommet</button>
     <button class="btn" id="printBtn">Skriv ut</button>
-    <button class="btn" id="dlBtn" title="Last ned en sikkerhetskopi av bordkartet (.json)">Last ned</button>
+    <button class="btn" id="imgBtn" title="Lagre skissen du ser som bilde (PNG) – lett å dele">Last ned bilde</button>
+    <button class="btn" id="dlBtn" title="Last ned en sikkerhetskopi av hele bordkartet (.json)">Last ned fil</button>
     <button class="btn" id="upBtn" title="Hent inn et bordkart fra en nedlastet fil">Hent inn</button>
     <input type="file" id="upFile" accept=".json,application/json" hidden>
     <button class="btn warn" id="resetBtn">Nullstill</button>
@@ -894,12 +895,78 @@ document.getElementById("addDoor").addEventListener("click",function(){
 function exportJSON(){
   return JSON.stringify({app:"bordkart-daap",exported:new Date().toISOString(),state:state});
 }
-function blobDownload(name,data){
+function blobDownloadBlob(name,blob){
   var a=document.createElement("a");
-  var u=URL.createObjectURL(new Blob([data],{type:"application/json"}));
+  var u=URL.createObjectURL(blob);
   a.href=u;a.download=name;document.body.appendChild(a);a.click();
   setTimeout(function(){URL.revokeObjectURL(u);a.remove();},2000);
 }
+function blobDownload(name,data){
+  blobDownloadBlob(name,new Blob([data],{type:"application/json"}));
+}
+function tokenCSS(){
+  var cs=getComputedStyle(document.documentElement);
+  var names=["--paper","--floor","--floorline","--grid","--muted","--rose","--blush","--blush-stroke","--blush-ink","--gold","--goldfill","--gold-ink","--amber","--amberfill","--wood","--woodline","--wood-ink"];
+  var s=":root{";
+  for(var i=0;i<names.length;i++)s+=names[i]+":"+cs.getPropertyValue(names[i]).trim()+";";
+  return s+"}";
+}
+function svgRulesCSS(){
+  var out="text{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}";
+  try{
+    for(var s=0;s<document.styleSheets.length;s++){
+      var rules=document.styleSheets[s].cssRules||[];
+      for(var i=0;i<rules.length;i++){
+        var r=rules[i];
+        if(r.selectorText&&/\.(room|roomlab|tbl|seat|door)/.test(r.selectorText))out+=r.cssText;
+      }
+    }
+  }catch(e){}
+  return out;
+}
+function makePng(cb){
+  var R=room();
+  var clone=svg.cloneNode(true);
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("width",R.w);
+  clone.setAttribute("height",R.h);
+  var st=document.createElementNS("http://www.w3.org/2000/svg","style");
+  st.textContent=tokenCSS()+svgRulesCSS();
+  clone.insertBefore(st,clone.firstChild);
+  var xml=new XMLSerializer().serializeToString(clone);
+  var u=URL.createObjectURL(new Blob([xml],{type:"image/svg+xml;charset=utf-8"}));
+  var img=new Image();
+  img.onload=function(){
+    var sc=2,c=document.createElement("canvas");
+    c.width=R.w*sc;c.height=R.h*sc;
+    var g=c.getContext("2d");
+    var bg=(getComputedStyle(document.documentElement).getPropertyValue("--paper")||"").trim()||"#ffffff";
+    g.fillStyle=bg;
+    g.fillRect(0,0,c.width,c.height);
+    g.drawImage(img,0,0,c.width,c.height);
+    URL.revokeObjectURL(u);
+    c.toBlob(function(b){cb(b);},"image/png");
+  };
+  img.onerror=function(){URL.revokeObjectURL(u);cb(null);};
+  img.src=u;
+}
+document.getElementById("imgBtn").addEventListener("click",function(){
+  makePng(function(b){
+    if(!b){alert("Fikk ikke laget bilde her – prøv «Skriv ut» i stedet.");return;}
+    var name="bordkart-"+state.active+"-"+new Date().toISOString().slice(0,10)+".png";
+    if(window.claude&&window.claude.downloads){
+      window.claude.downloads.save({filename:name,data:b})
+        .then(function(){flash("Bilde lastet ned ✓");})
+        .catch(function(err){
+          if(err&&err.code==="declined")return;
+          blobDownloadBlob(name,b);
+        });
+    }else{
+      blobDownloadBlob(name,b);
+      flash("Bilde lastet ned ✓");
+    }
+  });
+});
 document.getElementById("dlBtn").addEventListener("click",function(){
   var name="bordkart-daap-"+new Date().toISOString().slice(0,10)+".json";
   var data=exportJSON();

@@ -87,8 +87,16 @@
   :focus-visible{outline:2px solid var(--rose); outline-offset:2px; border-radius:6px}
 
   .app{display:flex; gap:14px; padding:0 20px 20px; align-items:flex-start}
+  .main{flex:1; min-width:0; display:flex; flex-direction:column; gap:10px}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{
+    background:var(--btn); border:1px solid var(--btn-line); border-radius:999px;
+    padding:7px 16px; cursor:pointer; font-size:13px; font-weight:600; color:var(--muted);
+  }
+  .tab:hover{border-color:var(--rose)}
+  .tab.on{background:var(--rose); border-color:var(--rose); color:var(--pri-ink)}
   .stage{
-    flex:1; overflow:auto; background:var(--floor);
+    overflow:auto; background:var(--floor);
     border:1.5px solid var(--floorline); border-radius:16px; box-shadow:var(--shadow);
   }
   #floor{display:block; width:1250px; max-width:none; user-select:none}
@@ -174,6 +182,11 @@
     padding:5px 2px; font-size:11.5px; cursor:pointer; color:var(--muted);
   }
   .pseg button.on{border-color:var(--rose); color:var(--rose); font-weight:700}
+  .stp{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px; font-size:12px; color:var(--muted)}
+  .stp .ctl{display:inline-flex; align-items:center; gap:7px}
+  .stp .num{min-width:18px; text-align:center; color:var(--ink); font-weight:650; font-variant-numeric:tabular-nums}
+  .stp .ctl button{width:24px; height:24px; border-radius:7px; border:1px solid var(--btn-line); background:var(--btn); cursor:pointer; line-height:1; padding:0}
+  .stp .ctl button:hover{border-color:var(--rose)}
   .prow2{display:flex; gap:6px; margin-top:9px}
   .prow2 .sp{flex:1}
   .pri{
@@ -191,6 +204,7 @@
 
   @media (max-width:940px){
     .app{flex-direction:column; align-items:stretch}
+    .main{width:100%}
     .stage{width:100%; max-width:100%}
     .side{width:100%}
     .stats{margin-left:0; width:100%}
@@ -204,7 +218,7 @@
       --gold:#9a7a30; --goldfill:#f2e6c8; --gold-ink:#5a4515; --amber:#996a20; --amberfill:#f6ecd8;
       --wood:#f2ecdf; --woodline:#b8a88a; --wood-ink:#6a5530; --shadow:none;
     }
-    .actions,.side,.sub{display:none!important}
+    .actions,.side,.sub,.tabs{display:none!important}
     .app{display:block; padding:0 8px}
     .top{padding:4px 8px}
     .stage{overflow:visible; border-color:#ccc; box-shadow:none}
@@ -217,7 +231,7 @@
     <span class="bow">🎀</span>
     <div>
       <h1>Bordkart · Dåp</h1>
-      <p class="sub">Trykk på en plass for å endre navn · dra navn mellom plasser · dra bordene dit du vil – alt lagres i nettleseren</p>
+      <p class="sub">To skisser av lokalet – bytt med fanene. Trykk på en plass for å endre navn · trykk på et bord for navn, fasong og antall plasser · dra navn og bord dit du vil – alt lagres i nettleseren</p>
     </div>
   </div>
   <div class="stats" id="stats"></div>
@@ -231,8 +245,14 @@
 </header>
 
 <div class="app">
-  <div class="stage" id="stage">
-    <svg id="floor" viewBox="0 0 1250 800" xmlns="http://www.w3.org/2000/svg" aria-label="Plantegning av lokalet"></svg>
+  <div class="main">
+    <div class="tabs" id="tabs">
+      <button class="tab" data-sk="hestesko">Skisse 1 · Hestesko</button>
+      <button class="tab" data-sk="rundbord">Skisse 2 · Rundbord</button>
+    </div>
+    <div class="stage" id="stage">
+      <svg id="floor" viewBox="0 0 1250 800" xmlns="http://www.w3.org/2000/svg" aria-label="Plantegning av lokalet"></svg>
+    </div>
   </div>
 
   <aside class="side" id="side">
@@ -260,8 +280,8 @@
         <li><span class="sw g"></span>Vertskap / dåpsbarn</li>
         <li><span class="sw r"></span>Middagsgjest</li>
         <li><span class="sw u"></span>Usikker (?)</li>
-        <li><span class="sw l"></span>Ledig plass – 4 stk til barna</li>
-        <li><span class="sw w"></span>Bord – dra for å flytte, trykk for å endre navn</li>
+        <li><span class="sw l"></span>Ledig plass – til barna m.m.</li>
+        <li><span class="sw w"></span>Bord – dra for å flytte, trykk for navn og fasong</li>
       </ul>
     </section>
   </aside>
@@ -273,36 +293,47 @@
 <script>
 (function(){
 "use strict";
-var LS_KEY="bordkart-daap-v1";
-var HS={W:242,H:500,d:46};
+var LS_KEY="bordkart-daap-v3";
+var HS_D=46;
 var VB={w:1250,h:800};
 
 function S(n,s){return{n:n,s:s||"ok"}}
+function seats(list){return list.map(function(x){return typeof x==="string"?S(x):x})}
+function rt(id,name,x,y,list){return{id:id,type:"round",name:name,x:x,y:y,seats:seats(list)}}
+function coffeeList(){return seats(["Mathea","Alfred","Andrea","Kobe","Thale","Adrian","Brage","Mathias","Even","Viktoria",S("Sivert","usikker"),"Maria","Sarah","Nichlas","Birgit"])}
+function noList(){return seats(["Vegard","Remi","Kim","Mirasol",S("Tanja","usikker"),"Geir Morten","Linnea","Sanna","Tiril","Becky","Sandra","Elise","Anna","Knut Asgeir","Emilie"])}
+
 function defaultState(){
   return {
-    v:1, seq:10,
-    tables:[
-      {id:"hs",type:"hs",name:"Hestesko",x:80,y:100,seats:[
-        S("Mamma","vert"),S("Signe","vert"),S("Pappa","vert"),
-        S("Elise"),S("Kornelia"),S("Joakim"),S("Kathrine"),S("Terje"),S("Roy"),S("Maya"),S("Helene"),S("Hanne"),S("Paul"),
-        S("Oscar"),S("Sander","usikker"),S("Malin","usikker"),S("Hilde"),S("Robert"),S("Emma"),S("Sigurd"),S("Elise"),S("Oliver"),S("Frida")
-      ]},
-      {id:"r1",type:"round",name:"Rundbord 1",x:660,y:235,seats:[
-        S("Julie"),S("Bodil"),S("Kåre"),S("Unni"),S("Alf"),S("Britt Sissel"),S("Solrun"),S("Ivar")
-      ]},
-      {id:"r2",type:"round",name:"Rundbord 2",x:960,y:235,seats:[
-        S("Mary"),S("Jarle"),S("Einar"),S("Ragnhild"),S("Lena"),S("Isabella"),S("Geir Erling"),S("Lars")
-      ]},
-      {id:"r3",type:"round",name:"Rundbord 3",x:810,y:540,seats:[
-        S("Alf Magne"),S("Anita"),S("Nils"),S("Nina"),S(""),S(""),S(""),S("")
-      ]},
-      {id:"kake",type:"rect",name:"Kakebord 🎂",x:470,y:706,w:220,h:60},
-      {id:"avl",type:"rect",name:"Avlastningsbord",x:940,y:706,w:200,h:60}
-    ],
-    pools:{
-      unplaced:[],
-      coffee:[S("Mathea"),S("Alfred"),S("Andrea"),S("Kobe"),S("Thale"),S("Adrian"),S("Brage"),S("Mathias"),S("Even"),S("Viktoria"),S("Sivert","usikker"),S("Maria"),S("Sarah"),S("Nichlas"),S("Birgit")],
-      no:[S("Vegard"),S("Remi"),S("Kim"),S("Mirasol"),S("Tanja","usikker"),S("Geir Morten"),S("Linnea"),S("Sanna"),S("Tiril"),S("Becky"),S("Sandra"),S("Elise"),S("Anna"),S("Knut Asgeir"),S("Emilie")]
+    v:3, seq:20, active:"hestesko",
+    sketches:{
+      hestesko:{
+        tables:[
+          {id:"hs",type:"hs",name:"Hestesko",x:345,y:110,hn:11,on:10,inn:8,seats:seats([
+            "Kornelia","Joakim","Kathrine","Terje",S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),S("Sander","usikker"),S("Malin","usikker"),"Hilde","Robert",
+            "Roy","Maya","Helene","Hanne","Paul","Julie","Bodil","Kåre","Unni","Alf",
+            "Emma","Sigurd","Elise","Oliver","Frida","Mary","Jarle","Einar","Ragnhild","Lena",
+            "Britt Sissel","Solrun","Ivar","Alf Magne","Anita","","","",
+            "Isabella","Geir Erling","Lars","Nils","Nina","","",""
+          ])},
+          {id:"kake1",type:"rect",name:"Kakebord 🎂",x:330,y:690,w:220,h:60},
+          {id:"avl1",type:"rect",name:"Avlastningsbord",x:720,y:690,w:200,h:60}
+        ],
+        pools:{unplaced:[],coffee:coffeeList(),no:noList()}
+      },
+      rundbord:{
+        tables:[
+          rt("b1","Rundbord 1",280,210,[S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),"Kornelia","Joakim","Kathrine","Terje","Roy"]),
+          rt("b2","Rundbord 2",625,210,["Maya","Helene","Hanne","Paul","Julie","Bodil","Kåre","Unni"]),
+          rt("b3","Rundbord 3",970,210,["Alf","Britt Sissel","Solrun","Ivar","Alf Magne","Anita","",""]),
+          rt("b4","Rundbord 4",280,520,[S("Sander","usikker"),S("Malin","usikker"),"Hilde","Robert","Emma","Sigurd","Elise","Oliver"]),
+          rt("b5","Rundbord 5",625,520,["Frida","Mary","Jarle","Einar","Ragnhild","Lena","Isabella","Geir Erling"]),
+          rt("b6","Rundbord 6",970,520,["Lars","Nils","Nina","","","","",""]),
+          {id:"kake2",type:"rect",name:"Kakebord 🎂",x:330,y:706,w:220,h:60},
+          {id:"avl2",type:"rect",name:"Avlastningsbord",x:720,y:706,w:200,h:60}
+        ],
+        pools:{unplaced:[],coffee:coffeeList(),no:noList()}
+      }
     }
   };
 }
@@ -310,20 +341,22 @@ function defaultState(){
 var state=null;
 try{
   var raw=localStorage.getItem(LS_KEY);
-  if(raw){var j=JSON.parse(raw); if(j&&j.v===1&&j.tables)state=j;}
+  if(raw){var j=JSON.parse(raw); if(j&&j.v===3&&j.sketches)state=j;}
 }catch(e){}
 if(!state)state=defaultState();
+function cur(){return state.sketches[state.active]}
 
 var svg=document.getElementById("floor");
 var side=document.getElementById("side");
 var stage=document.getElementById("stage");
+var tabsEl=document.getElementById("tabs");
 var pop=document.getElementById("pop");
 var ghost=document.getElementById("ghost");
 var savedEl=document.getElementById("saved");
 var savedTimer=null;
 
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
-function getT(id){for(var i=0;i<state.tables.length;i++)if(state.tables[i].id===id)return state.tables[i];return null}
+function getT(id){var ts=cur().tables;for(var i=0;i<ts.length;i++)if(ts[i].id===id)return ts[i];return null}
 
 function save(){
   try{localStorage.setItem(LS_KEY,JSON.stringify(state));}catch(e){}
@@ -334,27 +367,71 @@ function save(){
 function commit(){save();render()}
 
 /* ---------- geometry ---------- */
+function hsDims(t){
+  var W=(t.hn-1)*48+80;
+  var needO=t.on?58+(t.on-1)*44+30:150;
+  var needI=t.inn?118+(t.inn-1)*44+30:150;
+  return{W:W,H:Math.max(160,needO,needI)};
+}
 function seatPts(t){
   var p=[],i;
   if(t.type==="hs"){
-    for(i=-1;i<=1;i++)p.push({x:HS.W/2+i*76,y:-34});
-    for(i=0;i<10;i++)p.push({x:-34,y:64+i*45});
-    for(i=0;i<10;i++)p.push({x:HS.W+34,y:64+i*45});
+    var D=hsDims(t);
+    for(i=0;i<t.hn;i++)p.push({x:D.W/2+(i-(t.hn-1)/2)*48,y:-34});
+    for(i=0;i<t.on;i++)p.push({x:-34,y:58+i*44});
+    for(i=0;i<t.on;i++)p.push({x:D.W+34,y:58+i*44});
+    for(i=0;i<t.inn;i++)p.push({x:HS_D+34,y:118+i*44});
+    for(i=0;i<t.inn;i++)p.push({x:D.W-HS_D-34,y:118+i*44});
   }else if(t.type==="round"){
     var n=t.seats.length;
     for(i=0;i<n;i++){var a=(-90+i*(360/n))*Math.PI/180;p.push({x:Math.cos(a)*92,y:Math.sin(a)*92});}
   }
   return p;
 }
-function hsPath(){
-  var W=HS.W,H=HS.H,d=HS.d,g=W-2*d;
+function hsPath(t){
+  var D=hsDims(t),W=D.W,H=D.H,d=HS_D,g=W-2*d;
   return "M0,0 h"+W+" v"+H+" h-"+d+" v-"+(H-d)+" h-"+g+" v"+(H-d)+" h-"+d+" Z";
 }
 function clampT(t){
   function cl(v,a,b){return Math.min(Math.max(v,a),b)}
-  if(t.type==="hs"){t.x=cl(t.x,60,VB.w-12-HS.W-60);t.y=cl(t.y,58,VB.h-12-HS.H-6);}
+  if(t.type==="hs"){var D=hsDims(t);t.x=cl(t.x,60,Math.max(60,VB.w-12-D.W-60));t.y=cl(t.y,58,Math.max(58,VB.h-12-D.H-6));}
   else if(t.type==="round"){t.x=cl(t.x,132,VB.w-132);t.y=cl(t.y,132,VB.h-132);}
   else{t.x=cl(t.x,20,VB.w-20-t.w);t.y=cl(t.y,20,VB.h-20-t.h);}
+}
+
+/* ---------- resizing tables ---------- */
+function toPool(st){cur().pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"})}
+function resizeRound(t,n){
+  var occ=[],i;
+  for(i=0;i<t.seats.length;i++)if(t.seats[i].n)occ.push(t.seats[i]);
+  var ns=[];for(i=0;i<n;i++)ns.push(S(""));
+  for(i=0;i<occ.length;i++){
+    if(i<n)ns[i]=occ[i];else toPool(occ[i]);
+  }
+  t.seats=ns;
+}
+function resizeHs(t,hn,on,inn){
+  var oldSec=[t.hn,t.on,t.on,t.inn,t.inn];
+  var newSec=[hn,on,on,inn,inn];
+  var olds=[],idx=0,s,k;
+  for(s=0;s<5;s++){
+    olds.push(t.seats.slice(idx,idx+oldSec[s]).filter(function(x){return x.n}));
+    idx+=oldSec[s];
+  }
+  var ns=[],secStart=[];
+  for(s=0;s<5;s++){
+    secStart.push(ns.length);
+    for(k=0;k<newSec[s];k++)ns.push(S(""));
+  }
+  var overflow=[];
+  for(s=0;s<5;s++)for(k=0;k<olds[s].length;k++){
+    if(k<newSec[s])ns[secStart[s]+k]=olds[s][k];else overflow.push(olds[s][k]);
+  }
+  var oi=0;
+  for(var j=0;j<ns.length&&oi<overflow.length;j++)if(!ns[j].n)ns[j]=overflow[oi++];
+  for(;oi<overflow.length;oi++)toPool(overflow[oi]);
+  t.hn=hn;t.on=on;t.inn=inn;t.seats=ns;
+  clampT(t);
 }
 
 /* ---------- rendering ---------- */
@@ -383,9 +460,10 @@ function tableSVG(t){
   var filled=0,i;
   if(t.seats)for(i=0;i<t.seats.length;i++)if(t.seats[i].n)filled++;
   if(t.type==="hs"){
-    out+='<path class="tbl-body" d="'+hsPath()+'"/>';
-    out+='<text class="tbl-label" x="'+(HS.W/2)+'" y="20">'+esc(t.name)+"</text>";
-    out+='<text class="tbl-count" x="'+(HS.W/2)+'" y="34">'+filled+"/"+t.seats.length+"</text>";
+    var D=hsDims(t);
+    out+='<path class="tbl-body" d="'+hsPath(t)+'"/>';
+    out+='<text class="tbl-label" x="'+(D.W/2)+'" y="20">'+esc(t.name)+"</text>";
+    out+='<text class="tbl-count" x="'+(D.W/2)+'" y="34">'+filled+"/"+t.seats.length+"</text>";
   }else if(t.type==="round"){
     out+='<circle class="tbl-body" r="60"/>';
     out+='<text class="tbl-label" y="-1">'+esc(t.name)+"</text>";
@@ -402,15 +480,19 @@ function render(){
   var out='<defs><pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1.1" fill="var(--grid)"/></pattern></defs>';
   out+='<rect class="room" x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18"/>';
   out+='<rect x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18" fill="url(#dots)" stroke="var(--floorline)" stroke-width="1.5"/>';
-  for(var i=0;i<state.tables.length;i++)out+=tableSVG(state.tables[i]);
-  out+='<text class="roomlab" x="28" y="'+(VB.h-24)+'">Lokalet · skisse – dra bordene dit du vil</text>';
+  var ts=cur().tables;
+  for(var i=0;i<ts.length;i++)out+=tableSVG(ts[i]);
+  var lab=state.active==="hestesko"?"Skisse 1 · Hestesko":"Skisse 2 · Rundbord";
+  out+='<text class="roomlab" x="28" y="'+(VB.h-24)+'">'+lab+" – dra bordene dit du vil</text>";
   svg.innerHTML=out;
+  var tabs=tabsEl.querySelectorAll(".tab");
+  for(var k=0;k<tabs.length;k++)tabs[k].classList.toggle("on",tabs[k].getAttribute("data-sk")===state.active);
   renderPools();renderStats();
 }
 function renderPools(){
   var boxes=side.querySelectorAll("[data-pool]");
   for(var b=0;b<boxes.length;b++){
-    var key=boxes[b].getAttribute("data-pool"), arr=state.pools[key], html="";
+    var key=boxes[b].getAttribute("data-pool"), arr=cur().pools[key], html="";
     for(var i=0;i<arr.length;i++){
       var g=arr[i];
       html+='<button class="chip '+(g.s==="usikker"?"usikker":"")+'" data-pool="'+key+'" data-i="'+i+'">'+esc(g.n)
@@ -420,15 +502,15 @@ function renderPools(){
     }
     boxes[b].innerHTML=html;
   }
-  document.getElementById("cntUnplaced").textContent=state.pools.unplaced.length||"";
-  document.getElementById("cntCoffee").textContent=state.pools.coffee.length;
-  document.getElementById("cntNo").textContent="("+state.pools.no.length+")";
-  document.getElementById("emptyUnplaced").style.display=state.pools.unplaced.length?"none":"";
+  document.getElementById("cntUnplaced").textContent=cur().pools.unplaced.length||"";
+  document.getElementById("cntCoffee").textContent=cur().pools.coffee.length;
+  document.getElementById("cntNo").textContent="("+cur().pools.no.length+")";
+  document.getElementById("emptyUnplaced").style.display=cur().pools.unplaced.length?"none":"";
 }
 function renderStats(){
-  var seated=0,ledige=0;
-  for(var i=0;i<state.tables.length;i++){
-    var t=state.tables[i];if(!t.seats)continue;
+  var seated=0,ledige=0,ts=cur().tables;
+  for(var i=0;i<ts.length;i++){
+    var t=ts[i];if(!t.seats)continue;
     for(var k=0;k<t.seats.length;k++)t.seats[k].n?seated++:ledige++;
   }
   document.getElementById("stats").innerHTML=
@@ -467,11 +549,25 @@ function syncSeg(){
   var btns=pop.querySelectorAll("#pseg button");
   for(var i=0;i<btns.length;i++)btns[i].classList.toggle("on",btns[i].getAttribute("data-s")===popCtx.s);
 }
+function stepRow(label,key,val){
+  return '<div class="stp"><span>'+label+'</span><span class="ctl">'+
+    '<button data-st="'+key+':-1" aria-label="Færre">−</button>'+
+    '<span class="num" id="n-'+key+'">'+val+'</span>'+
+    '<button data-st="'+key+':1" aria-label="Flere">+</button></span></div>';
+}
 function openTablePop(tid){
   var t=getT(tid);
   popCtx={kind:"table",tid:tid};
+  var stp="";
+  if(t.type==="hs"){
+    stp=stepRow("Plasser på tvers","hn",t.hn)
+       +stepRow("Langside · ytterst","on",t.on)
+       +stepRow("Langside · innerst","inn",t.inn);
+  }else if(t.type==="round"){
+    stp=stepRow("Plasser rundt bordet","rn",t.seats.length);
+  }
   pop.innerHTML=
-    '<input id="pname" placeholder="Navn på bordet" value="'+esc(t.name)+'" maxlength="30">'+
+    '<input id="pname" placeholder="Navn på bordet" value="'+esc(t.name)+'" maxlength="30">'+stp+
     '<div class="prow2">'+(t.type!=="hs"?'<button class="ghostbtn" id="pdel">Slett bord</button>':"")+
     '<span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
   var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .tbl-body');
@@ -482,17 +578,37 @@ function openTablePop(tid){
 pop.addEventListener("click",function(e){
   var segBtn=e.target.closest("#pseg button");
   if(segBtn){popCtx.s=segBtn.getAttribute("data-s");syncSeg();return;}
+  var st=e.target.closest("[data-st]");
+  if(st&&popCtx&&popCtx.kind==="table"){
+    var parts=st.getAttribute("data-st").split(":"),key=parts[0],dv=+parts[1];
+    var tt2=getT(popCtx.tid);
+    if(key==="rn"){
+      var n=Math.min(12,Math.max(2,tt2.seats.length+dv));
+      if(n!==tt2.seats.length){resizeRound(tt2,n);save();render();}
+      document.getElementById("n-rn").textContent=tt2.seats.length;
+    }else{
+      var hn=tt2.hn,on=tt2.on,inn=tt2.inn;
+      if(key==="hn")hn=Math.min(13,Math.max(3,hn+dv));
+      if(key==="on")on=Math.min(13,Math.max(0,on+dv));
+      if(key==="inn")inn=Math.min(13,Math.max(0,inn+dv));
+      if(hn!==tt2.hn||on!==tt2.on||inn!==tt2.inn){resizeHs(tt2,hn,on,inn);save();render();}
+      document.getElementById("n-hn").textContent=tt2.hn;
+      document.getElementById("n-on").textContent=tt2.on;
+      document.getElementById("n-inn").textContent=tt2.inn;
+    }
+    return;
+  }
   if(e.target.id==="psave")doPopSave();
   if(e.target.id==="pclear"){
     var t=getT(popCtx.tid),st=t.seats[popCtx.i];
-    if(st.n)state.pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"});
+    if(st.n)cur().pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"});
     t.seats[popCtx.i]={n:"",s:"ok"};
     closePop();commit();
   }
   if(e.target.id==="pdel"){
     var tt=getT(popCtx.tid);
-    if(tt.seats)for(var i=0;i<tt.seats.length;i++)if(tt.seats[i].n)state.pools.unplaced.push({n:tt.seats[i].n,s:tt.seats[i].s==="usikker"?"usikker":"ok"});
-    state.tables=state.tables.filter(function(x){return x.id!==popCtx.tid});
+    if(tt.seats)for(var i=0;i<tt.seats.length;i++)if(tt.seats[i].n)cur().pools.unplaced.push({n:tt.seats[i].n,s:tt.seats[i].s==="usikker"?"usikker":"ok"});
+    cur().tables=cur().tables.filter(function(x){return x.id!==popCtx.tid});
     closePop();commit();
   }
 });
@@ -505,7 +621,7 @@ function doPopSave(){
   var name=document.getElementById("pname").value.trim();
   if(popCtx.kind==="seat"){
     var t=getT(popCtx.tid),old=t.seats[popCtx.i];
-    if(old.n&&name&&old.n!==name)state.pools.unplaced.push({n:old.n,s:old.s==="usikker"?"usikker":"ok"});
+    if(old.n&&name&&old.n!==name)cur().pools.unplaced.push({n:old.n,s:old.s==="usikker"?"usikker":"ok"});
     t.seats[popCtx.i]=name?{n:name,s:popCtx.s}:{n:"",s:"ok"};
   }else{
     getT(popCtx.tid).name=name||"Bord";
@@ -600,7 +716,7 @@ function endPress(e){
       commit();return;
     }
   }else if(d&&d.pool){
-    state.pools.unplaced.push({n:src.n,s:src.s==="usikker"?"usikker":"ok"});
+    cur().pools.unplaced.push({n:src.n,s:src.s==="usikker"?"usikker":"ok"});
     getT(p.tid).seats[p.i]={n:"",s:"ok"};
     commit();return;
   }
@@ -626,7 +742,7 @@ side.addEventListener("pointermove",function(e){
   var dx=e.clientX-cpress.x0,dy=e.clientY-cpress.y0;
   if(!cpress.moved&&Math.hypot(dx,dy)>7){
     cpress.moved=true;
-    showGhost(state.pools[cpress.pool][cpress.i].n);
+    showGhost(cur().pools[cpress.pool][cpress.i].n);
     cpress.el.classList.add("dragging");
   }
   if(cpress.moved){moveGhost(e.clientX,e.clientY);hoverHints(e.clientX,e.clientY);}
@@ -635,17 +751,17 @@ side.addEventListener("pointerup",function(e){
   if(!cpress)return;
   var p=cpress;cpress=null;hideGhost();clearHints();
   p.el.classList.remove("dragging");
-  var g=state.pools[p.pool][p.i];
+  var g=cur().pools[p.pool][p.i];
   if(!p.moved){
-    if(p.onX&&p.pool==="unplaced"){state.pools.unplaced.splice(p.i,1);commit();}
+    if(p.onX&&p.pool==="unplaced"){cur().pools.unplaced.splice(p.i,1);commit();}
     return;
   }
   var d=dropAt(e.clientX,e.clientY);
   if(d&&d.seat){
     var t=getT(d.seat[0]),i2=d.seat[1],dst=t.seats[i2];
-    if(dst.n)state.pools.unplaced.push({n:dst.n,s:dst.s==="usikker"?"usikker":"ok"});
+    if(dst.n)cur().pools.unplaced.push({n:dst.n,s:dst.s==="usikker"?"usikker":"ok"});
     t.seats[i2]={n:g.n,s:g.s==="usikker"?"usikker":"ok"};
-    state.pools[p.pool].splice(p.i,1);
+    cur().pools[p.pool].splice(p.i,1);
     commit();
   }
 });
@@ -653,22 +769,29 @@ side.addEventListener("pointercancel",function(){
   if(cpress){cpress.el.classList.remove("dragging");cpress=null;hideGhost();clearHints();}
 });
 
-/* ---------- toolbar ---------- */
+/* ---------- tabs & toolbar ---------- */
+tabsEl.addEventListener("click",function(e){
+  var b=e.target.closest(".tab");if(!b)return;
+  var sk=b.getAttribute("data-sk");
+  if(sk===state.active)return;
+  state.active=sk;closePop();save();render();
+});
 document.getElementById("addRound").addEventListener("click",function(){
-  var n=0;for(var i=0;i<state.tables.length;i++)if(state.tables[i].type==="round")n++;
+  var ts=cur().tables,n=0;
+  for(var i=0;i<ts.length;i++)if(ts[i].type==="round")n++;
   var t={id:"t"+(state.seq++),type:"round",name:"Rundbord "+(n+1),
          x:300+((state.seq*137)%650),y:280+((state.seq*89)%330),
          seats:[S(""),S(""),S(""),S(""),S(""),S(""),S(""),S("")]};
-  clampT(t);state.tables.push(t);commit();
+  clampT(t);ts.push(t);commit();
 });
 document.getElementById("addRect").addEventListener("click",function(){
   var t={id:"t"+(state.seq++),type:"rect",name:"Nytt bord",w:180,h:58,
          x:260+((state.seq*171)%600),y:300+((state.seq*97)%330)};
-  clampT(t);state.tables.push(t);commit();
+  clampT(t);cur().tables.push(t);commit();
 });
 document.getElementById("printBtn").addEventListener("click",function(){window.print()});
 document.getElementById("resetBtn").addEventListener("click",function(){
-  if(confirm("Nullstille bordkartet til det opprinnelige forslaget? Endringene dine slettes.")){
+  if(confirm("Nullstille begge skissene til det opprinnelige forslaget? Endringene dine slettes.")){
     try{localStorage.removeItem(LS_KEY);}catch(e){}
     state=defaultState();render();
   }

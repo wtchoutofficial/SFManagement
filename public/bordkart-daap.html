@@ -108,6 +108,11 @@
   .tbl-label{fill:var(--wood-ink); font-weight:650; font-size:12.5px; text-anchor:middle; cursor:grab}
   .tbl-count{fill:var(--wood-ink); opacity:.75; font-size:10px; text-anchor:middle; cursor:grab; font-variant-numeric:tabular-nums}
   .tbl.dragging .tbl-body{cursor:grabbing}
+  .door-gap{fill:var(--floor)}
+  .door-arc{fill:none; stroke:var(--woodline); stroke-width:1.5; stroke-dasharray:5 4}
+  .door-leaf{stroke:var(--wood-ink); stroke-width:3.5; stroke-linecap:round}
+  .door-lab{fill:var(--muted); font-size:10.5px; font-style:italic; text-anchor:middle}
+  .door-hit{fill:transparent; stroke:none}
   .seat{cursor:pointer}
   .seat circle{fill:var(--blush); stroke:var(--blush-stroke); stroke-width:1.6}
   .seat text{fill:var(--blush-ink); text-anchor:middle; font-weight:600; pointer-events:none}
@@ -222,7 +227,7 @@
     .app{display:block; padding:0 8px}
     .top{padding:4px 8px}
     .stage{overflow:visible; border-color:#ccc; box-shadow:none}
-    #floor{width:100%}
+    #floor{width:100%!important}
   }
 </style>
 
@@ -238,6 +243,8 @@
   <div class="actions">
     <button class="btn" id="addRound">+ Rundbord</button>
     <button class="btn" id="addRect">+ Småbord</button>
+    <button class="btn" id="addDoor">+ Dør</button>
+    <button class="btn" id="rotRoom" title="Vri hele lokalet 90° – bordene følger med">Snu rommet</button>
     <button class="btn" id="printBtn">Skriv ut</button>
     <button class="btn warn" id="resetBtn">Nullstill</button>
     <span class="saved" id="saved">Lagret ✓</span>
@@ -289,6 +296,7 @@
 
 <div id="pop" hidden></div>
 <div id="ghost" hidden></div>
+<style id="pageOrient"></style>
 
 <script>
 (function(){
@@ -317,8 +325,10 @@ function defaultState(){
             "Isabella","Geir Erling","Lars","Nils","Nina","","",""
           ])},
           {id:"kake1",type:"rect",name:"Kakebord 🎂",x:330,y:690,w:220,h:60},
-          {id:"avl1",type:"rect",name:"Avlastningsbord",x:720,y:690,w:200,h:60}
+          {id:"avl1",type:"rect",name:"Avlastningsbord",x:720,y:690,w:200,h:60},
+          {id:"dor1",type:"door",name:"Dør",x:1240,y:400,r:0}
         ],
+        room:{w:1250,h:800},
         pools:{unplaced:[],coffee:coffeeList(),no:noList()}
       },
       rundbord:{
@@ -330,8 +340,10 @@ function defaultState(){
           rt("b5","Rundbord 5",625,520,["Frida","Mary","Jarle","Einar","Ragnhild","Lena","Isabella","Geir Erling"]),
           rt("b6","Rundbord 6",970,520,["Lars","Nils","Nina","","","","",""]),
           {id:"kake2",type:"rect",name:"Kakebord 🎂",x:330,y:706,w:220,h:60},
-          {id:"avl2",type:"rect",name:"Avlastningsbord",x:720,y:706,w:200,h:60}
+          {id:"avl2",type:"rect",name:"Avlastningsbord",x:720,y:706,w:200,h:60},
+          {id:"dor2",type:"door",name:"Dør",x:1240,y:400,r:0}
         ],
+        room:{w:1250,h:800},
         pools:{unplaced:[],coffee:coffeeList(),no:noList()}
       }
     }
@@ -345,6 +357,20 @@ try{
 }catch(e){}
 if(!state)state=defaultState();
 function cur(){return state.sketches[state.active]}
+function room(){var c=cur();if(!c.room)c.room={w:VB.w,h:VB.h};return c.room}
+/* migrate older saved layouts: room dims, door, and re-clamp everything into the room */
+(function(){
+  var act=state.active,keys=Object.keys(state.sketches),k,i;
+  for(k=0;k<keys.length;k++){
+    state.active=keys[k];
+    var sk=cur(),R=room();
+    var hasDoor=false;
+    for(i=0;i<sk.tables.length;i++)if(sk.tables[i].type==="door")hasDoor=true;
+    if(!hasDoor)sk.tables.push({id:"dor_"+keys[k],type:"door",name:"Dør",x:R.w-10,y:Math.round(R.h/2),r:0});
+    for(i=0;i<sk.tables.length;i++)clampT(sk.tables[i]);
+  }
+  state.active=act;
+})();
 
 var svg=document.getElementById("floor");
 var side=document.getElementById("side");
@@ -393,14 +419,20 @@ function hsPath(t){
   return "M0,0 h"+W+" v"+H+" h-"+d+" v-"+(H-d)+" h-"+g+" v"+(H-d)+" h-"+d+" Z";
 }
 function clampT(t){
+  var R=room(),pv=pivot(t),hw,hh;
   function cl(v,a,b){return Math.min(Math.max(v,a),b)}
-  if(t.type==="hs"){var D=hsDims(t);t.x=cl(t.x,60,Math.max(60,VB.w-12-D.W-60));t.y=cl(t.y,58,Math.max(58,VB.h-12-D.H-6));}
-  else if(t.type==="round"){t.x=cl(t.x,132,VB.w-132);t.y=cl(t.y,132,VB.h-132);}
-  else{t.x=cl(t.x,20,VB.w-20-t.w);t.y=cl(t.y,20,VB.h-20-t.h);}
+  if(t.type==="hs"){var D=hsDims(t);hw=D.W/2+58;hh=D.H/2+58;}
+  else if(t.type==="round"){hw=hh=116;}
+  else if(t.type==="door"){hw=hh=2;}
+  else{hw=t.w/2+4;hh=t.h/2+4;}
+  if(((t.r||0)%180)===90){var tmp=hw;hw=hh;hh=tmp;}
+  hw=Math.min(hw,(R.w-16)/2);hh=Math.min(hh,(R.h-16)/2);
+  var X=cl(t.x+pv.x,8+hw,R.w-8-hw),Y=cl(t.y+pv.y,8+hh,R.h-8-hh);
+  t.x=X-pv.x;t.y=Y-pv.y;
 }
 function pivot(t){
   if(t.type==="hs"){var D=hsDims(t);return{x:D.W/2,y:D.H/2}}
-  if(t.type==="round")return{x:0,y:0};
+  if(t.type==="round"||t.type==="door")return{x:0,y:0};
   return{x:t.w/2,y:t.h/2};
 }
 function tf(t,x,y){
@@ -481,6 +513,13 @@ function tableSVG(t){
     out+='<g'+(rr?' transform="rotate('+(-rr)+')"':'')+'>'+
          '<text class="tbl-label" y="-1">'+esc(t.name)+"</text>"+
          '<text class="tbl-count" y="15">'+filled+"/"+t.seats.length+"</text></g>";
+  }else if(t.type==="door"){
+    out+='<rect class="door-gap" x="-5" y="-46" width="10" height="92"/>';
+    out+='<path class="door-arc" d="M -90,45 A 90 90 0 0 1 0,-45"/>';
+    out+='<line class="door-leaf" x1="0" y1="45" x2="-90" y2="45"/>';
+    out+='<g transform="translate(-38,10)'+(rr?' rotate('+(-rr)+')':'')+'">'+
+         '<text class="door-lab">'+esc(t.name)+"</text></g>";
+    out+='<rect class="tbl-body door-hit" x="-98" y="-52" width="106" height="104"/>';
   }else{
     out+='<rect class="tbl-body" width="'+t.w+'" height="'+t.h+'" rx="12"/>';
     out+='<g transform="translate('+(t.w/2)+','+(t.h/2)+')'+(rr?' rotate('+(-rr)+')':'')+'">'+
@@ -491,13 +530,17 @@ function tableSVG(t){
   return out+"</g>";
 }
 function render(){
+  var R=room();
+  svg.setAttribute("viewBox","0 0 "+R.w+" "+R.h);
+  svg.style.width=R.w+"px";
+  document.getElementById("pageOrient").textContent="@media print{@page{size:A4 "+(R.w>=R.h?"landscape":"portrait")+"}}";
   var out='<defs><pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1.1" fill="var(--grid)"/></pattern></defs>';
-  out+='<rect class="room" x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18"/>';
-  out+='<rect x="10" y="10" width="'+(VB.w-20)+'" height="'+(VB.h-20)+'" rx="18" fill="url(#dots)" stroke="var(--floorline)" stroke-width="1.5"/>';
+  out+='<rect class="room" x="10" y="10" width="'+(R.w-20)+'" height="'+(R.h-20)+'" rx="18"/>';
+  out+='<rect x="10" y="10" width="'+(R.w-20)+'" height="'+(R.h-20)+'" rx="18" fill="url(#dots)" stroke="var(--floorline)" stroke-width="1.5"/>';
   var ts=cur().tables;
   for(var i=0;i<ts.length;i++)out+=tableSVG(ts[i]);
   var lab=state.active==="hestesko"?"Skisse 1 · Hestesko":"Skisse 2 · Rundbord";
-  out+='<text class="roomlab" x="28" y="'+(VB.h-24)+'">'+lab+" – dra bordene dit du vil</text>";
+  out+='<text class="roomlab" x="28" y="'+(R.h-24)+'">'+lab+" – dra bordene dit du vil</text>";
   svg.innerHTML=out;
   var tabs=tabsEl.querySelectorAll(".tab");
   for(var k=0;k<tabs.length;k++)tabs[k].classList.toggle("on",tabs[k].getAttribute("data-sk")===state.active);
@@ -654,7 +697,7 @@ stage.addEventListener("scroll",closePop);
 
 /* ---------- drag & drop ---------- */
 var press=null,lastHover=null;
-function scaleF(){return svg.getBoundingClientRect().width/VB.w}
+function scaleF(){return svg.getBoundingClientRect().width/room().w}
 function showGhost(n){ghost.textContent=n;ghost.hidden=false}
 function moveGhost(x,y){ghost.style.left=x+"px";ghost.style.top=y+"px"}
 function hideGhost(){ghost.hidden=true}
@@ -806,6 +849,24 @@ document.getElementById("addRound").addEventListener("click",function(){
 document.getElementById("addRect").addEventListener("click",function(){
   var t={id:"t"+(state.seq++),type:"rect",name:"Nytt bord",w:180,h:58,
          x:260+((state.seq*171)%600),y:300+((state.seq*97)%330)};
+  clampT(t);cur().tables.push(t);commit();
+});
+document.getElementById("rotRoom").addEventListener("click",function(){
+  var c=cur(),R=room(),oldH=R.h,i;
+  for(i=0;i<c.tables.length;i++){
+    var t=c.tables[i],pv=pivot(t);
+    var X=t.x+pv.x,Y=t.y+pv.y;
+    t.r=(((t.r||0)+90)%360);
+    t.x=(oldH-Y)-pv.x;
+    t.y=X-pv.y;
+  }
+  c.room={w:R.h,h:R.w};
+  for(i=0;i<c.tables.length;i++)clampT(c.tables[i]);
+  closePop();commit();
+});
+document.getElementById("addDoor").addEventListener("click",function(){
+  var R=room();
+  var t={id:"t"+(state.seq++),type:"door",name:"Dør",x:R.w-10,y:Math.round(R.h/2),r:0};
   clampT(t);cur().tables.push(t);commit();
 });
 document.getElementById("printBtn").addEventListener("click",function(){window.print()});

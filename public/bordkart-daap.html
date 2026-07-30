@@ -398,6 +398,15 @@ function clampT(t){
   else if(t.type==="round"){t.x=cl(t.x,132,VB.w-132);t.y=cl(t.y,132,VB.h-132);}
   else{t.x=cl(t.x,20,VB.w-20-t.w);t.y=cl(t.y,20,VB.h-20-t.h);}
 }
+function pivot(t){
+  if(t.type==="hs"){var D=hsDims(t);return{x:D.W/2,y:D.H/2}}
+  if(t.type==="round")return{x:0,y:0};
+  return{x:t.w/2,y:t.h/2};
+}
+function tf(t,x,y){
+  var r=t.r||0,pv=pivot(t);
+  return "translate("+x+","+y+")"+(r?" rotate("+r+" "+pv.x+" "+pv.y+")":"");
+}
 
 /* ---------- resizing tables ---------- */
 function toPool(st){cur().pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"})}
@@ -445,7 +454,7 @@ function nameLines(n){
   return{lines:lines,fs:fs};
 }
 function seatSVG(t,i,pt){
-  var st=t.seats[i], cls="seat "+(st.n?st.s:"ledig");
+  var st=t.seats[i], cls="seat "+(st.n?st.s:"ledig"), rr=t.r||0;
   var nl=nameLines(st.n), txt="";
   if(nl.lines.length===1){
     txt='<text font-size="'+nl.fs+'" y="3.5">'+esc(nl.lines[0])+"</text>";
@@ -453,24 +462,29 @@ function seatSVG(t,i,pt){
     txt='<text font-size="'+nl.fs+'"><tspan x="0" y="-1.5">'+esc(nl.lines[0])+'</tspan><tspan x="0" dy="10">'+esc(nl.lines[1])+"</tspan></text>";
   }
   var q=(st.n&&st.s==="usikker")?'<text class="q" x="14" y="-13">?</text>':"";
-  return '<g class="'+cls+'" data-i="'+i+'" transform="translate('+pt.x+","+pt.y+')"><circle r="22"/>'+txt+q+"</g>";
+  var tr='translate('+pt.x+","+pt.y+')'+(rr?' rotate('+(-rr)+')':'');
+  return '<g class="'+cls+'" data-i="'+i+'" transform="'+tr+'"><circle r="22"/>'+txt+q+"</g>";
 }
 function tableSVG(t){
-  var out='<g class="tbl" data-t="'+t.id+'" transform="translate('+t.x+","+t.y+')">';
+  var rr=t.r||0;
+  var out='<g class="tbl" data-t="'+t.id+'" transform="'+tf(t,t.x,t.y)+'">';
   var filled=0,i;
   if(t.seats)for(i=0;i<t.seats.length;i++)if(t.seats[i].n)filled++;
   if(t.type==="hs"){
     var D=hsDims(t);
     out+='<path class="tbl-body" d="'+hsPath(t)+'"/>';
-    out+='<text class="tbl-label" x="'+(D.W/2)+'" y="20">'+esc(t.name)+"</text>";
-    out+='<text class="tbl-count" x="'+(D.W/2)+'" y="34">'+filled+"/"+t.seats.length+"</text>";
+    out+='<g transform="translate('+(D.W/2)+',26)'+(rr?' rotate('+(-rr)+')':'')+'">'+
+         '<text class="tbl-label" y="-6">'+esc(t.name)+"</text>"+
+         '<text class="tbl-count" y="8">'+filled+"/"+t.seats.length+"</text></g>";
   }else if(t.type==="round"){
     out+='<circle class="tbl-body" r="60"/>';
-    out+='<text class="tbl-label" y="-1">'+esc(t.name)+"</text>";
-    out+='<text class="tbl-count" y="15">'+filled+"/"+t.seats.length+"</text>";
+    out+='<g'+(rr?' transform="rotate('+(-rr)+')"':'')+'>'+
+         '<text class="tbl-label" y="-1">'+esc(t.name)+"</text>"+
+         '<text class="tbl-count" y="15">'+filled+"/"+t.seats.length+"</text></g>";
   }else{
     out+='<rect class="tbl-body" width="'+t.w+'" height="'+t.h+'" rx="12"/>';
-    out+='<text class="tbl-label" x="'+(t.w/2)+'" y="'+(t.h/2+4)+'">'+esc(t.name)+"</text>";
+    out+='<g transform="translate('+(t.w/2)+','+(t.h/2)+')'+(rr?' rotate('+(-rr)+')':'')+'">'+
+         '<text class="tbl-label" y="4">'+esc(t.name)+"</text></g>";
   }
   var pts=seatPts(t);
   for(i=0;i<pts.length;i++)out+=seatSVG(t,i,pts[i]);
@@ -566,6 +580,7 @@ function openTablePop(tid){
   }else if(t.type==="round"){
     stp=stepRow("Plasser rundt bordet","rn",t.seats.length);
   }
+  stp+=stepRow("Vri bordet","rot",(t.r||0)+"°");
   pop.innerHTML=
     '<input id="pname" placeholder="Navn på bordet" value="'+esc(t.name)+'" maxlength="30">'+stp+
     '<div class="prow2">'+(t.type!=="hs"?'<button class="ghostbtn" id="pdel">Slett bord</button>':"")+
@@ -582,7 +597,11 @@ pop.addEventListener("click",function(e){
   if(st&&popCtx&&popCtx.kind==="table"){
     var parts=st.getAttribute("data-st").split(":"),key=parts[0],dv=+parts[1];
     var tt2=getT(popCtx.tid);
-    if(key==="rn"){
+    if(key==="rot"){
+      tt2.r=(((tt2.r||0)+dv*45)%360+360)%360;
+      save();render();
+      document.getElementById("n-rot").textContent=tt2.r+"°";
+    }else if(key==="rn"){
       var n=Math.min(12,Math.max(2,tt2.seats.length+dv));
       if(n!==tt2.seats.length){resizeRound(tt2,n);save();render();}
       document.getElementById("n-rn").textContent=tt2.seats.length;
@@ -686,7 +705,7 @@ svg.addEventListener("pointermove",function(e){
   if(press.mode==="table"){
     var t=getT(press.tid),sc=scaleF();
     press.nx=t.x+dx/sc;press.ny=t.y+dy/sc;
-    press.el.setAttribute("transform","translate("+press.nx+","+press.ny+")");
+    press.el.setAttribute("transform",tf(t,press.nx,press.ny));
   }else{
     moveGhost(e.clientX,e.clientY);
     hoverHints(e.clientX,e.clientY);

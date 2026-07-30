@@ -314,42 +314,43 @@ function S(n,s){return{n:n,s:s||"ok"}}
 function seats(list){return list.map(function(x){return typeof x==="string"?S(x):x})}
 function rt(id,name,x,y,list){return{id:id,type:"round",name:name,x:x,y:y,seats:seats(list)}}
 function coffeeList(){return seats(["Mathea","Alfred","Andrea","Kobe","Thale","Adrian","Brage","Mathias","Even","Viktoria",S("Sivert","usikker"),"Maria","Sarah","Nichlas","Birgit"])}
-function noList(){return seats(["Vegard","Remi","Kim","Mirasol",S("Tanja","usikker"),"Geir Morten","Linnea","Sanna","Tiril","Becky","Sandra","Elise","Anna","Knut Asgeir","Emilie"])}
+function noList(){return seats(["Vegard","Remi","Kim","Mirasol",S("Tanja","usikker"),"Geir Morten","Linnea","Sanna","Tiril","Sandra","Elise","Anna","Knut Asgeir","Emilie"])}
 
 function defaultState(){
   return {
-    v:3, seq:20, active:"hestesko",
+    v:3, seq:30, active:"hestesko", mig2:1,
     sketches:{
       hestesko:{
         tables:[
-          {id:"hs",type:"hs",name:"Hestesko",x:345,y:110,hn:11,on:10,inn:8,seats:seats([
-            "Kornelia","Joakim","Kathrine","Terje",S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),S("Sander","usikker"),S("Malin","usikker"),"Hilde","Robert",
-            "Roy","Maya","Helene","Hanne","Paul","Julie","Bodil","Kåre","Unni","Alf",
-            "Emma","Sigurd","Elise","Oliver","Frida","Mary","Jarle","Einar","Ragnhild","Lena",
-            "Britt Sissel","Solrun","Ivar","Alf Magne","Anita","","","",
-            "Isabella","Geir Erling","Lars","Nils","Nina","","",""
+          {id:"hs",type:"hs",name:"Hestesko",x:168,y:200,hn:9,on:12,inn:12,seats:seats([
+            S("Sander","usikker"),"Joakim","Kornelia",S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),S("Malin","usikker"),"Sigurd","Elise",
+            "Helene","Ivar","Solrun","Kathrine","Hanne","Paul","Julie","Terje","Mathea","Alfred","Andrea","Kobe",
+            "Frida","Robert","Hilde","Emma","Lena","Jarle","Mary","Oliver","Thale","Adrian","Brage","Mathias",
+            "Britt Sissel","Maya","Roy","Unni","Alf","Lars","Alf Magne","Anita","Even","Viktoria",S("Sivert","usikker"),"Maria",
+            "Nils","Kåre","Bodil","Ragnhild","Einar","Isabella","Nina","Geir Erling","Sarah","Nichlas","Birgit","Becky"
           ])},
-          {id:"kake1",type:"rect",name:"Kakebord 🎂",x:330,y:690,w:220,h:60},
-          {id:"avl1",type:"rect",name:"Avlastningsbord",x:720,y:690,w:200,h:60},
-          {id:"dor1",type:"door",name:"Dør",x:1240,y:400,r:0}
+          {id:"kake1",type:"rect",name:"Kakebord 🎂",x:120,y:1090,w:220,h:60},
+          {id:"avl1",type:"rect",name:"Avlastningsbord",x:440,y:1090,w:200,h:60},
+          {id:"dor1",type:"door",name:"Dør",x:790,y:625,r:0}
         ],
-        room:{w:1250,h:800},
-        pools:{unplaced:[],coffee:coffeeList(),no:noList()}
+        room:{w:800,h:1250},
+        pools:{unplaced:[],coffee:[],no:noList()}
       },
       rundbord:{
         tables:[
-          rt("b1","Rundbord 1",280,210,[S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),"Kornelia","Joakim","Kathrine","Terje","Roy"]),
-          rt("b2","Rundbord 2",625,210,["Maya","Helene","Hanne","Paul","Julie","Bodil","Kåre","Unni"]),
-          rt("b3","Rundbord 3",970,210,["Alf","Britt Sissel","Solrun","Ivar","Alf Magne","Anita","",""]),
-          rt("b4","Rundbord 4",280,520,[S("Sander","usikker"),S("Malin","usikker"),"Hilde","Robert","Emma","Sigurd","Elise","Oliver"]),
-          rt("b5","Rundbord 5",625,520,["Frida","Mary","Jarle","Einar","Ragnhild","Lena","Isabella","Geir Erling"]),
-          rt("b6","Rundbord 6",970,520,["Lars","Nils","Nina","","","","",""]),
-          {id:"kake2",type:"rect",name:"Kakebord 🎂",x:330,y:706,w:220,h:60},
-          {id:"avl2",type:"rect",name:"Avlastningsbord",x:720,y:706,w:200,h:60},
-          {id:"dor2",type:"door",name:"Dør",x:1240,y:400,r:0}
+          rt("b1","MAIN",590,330,["Joakim","Kornelia",S("Elise","vert"),S("Signe","vert"),S("Oscar","vert"),S("Malin","usikker"),"Sigurd","Elise",S("Sander","usikker")]),
+          rt("b2","Rundbord 2",240,350,["Helene","Ivar","Solrun","Kathrine","Hanne","Paul","Julie","Terje"]),
+          rt("b3","Rundbord 3",430,830,["Britt Sissel","Maya","Roy","Unni","Alf","Lars","Alf Magne","Anita"]),
+          rt("b4","Rundbord 4",590,640,["Frida","Robert","Hilde","Emma","Lena","Jarle","Mary","Oliver"]),
+          rt("b5","Rundbord 5",240,660,["Nils","Kåre","Bodil","Ragnhild","Einar","Isabella","Nina","Geir Erling"]),
+          rt("b6","Rundbord 6",240,1030,["Mathea","Alfred","Andrea","Kobe","Thale","Adrian","Brage","Mathias"]),
+          rt("b7","Rundbord 7",590,1030,["Even","Viktoria",S("Sivert","usikker"),"Maria","Sarah","Nichlas","Birgit","Becky"]),
+          {id:"avl2",type:"rect",name:"Avlastningsbord",x:620,y:300,w:200,h:60,r:90},
+          {id:"kake2",type:"rect",name:"Kakebord 🎂",x:290,y:1150,w:220,h:60},
+          {id:"dor2",type:"door",name:"Dør",x:790,y:660,r:0}
         ],
-        room:{w:1250,h:800},
-        pools:{unplaced:[],coffee:coffeeList(),no:noList()}
+        room:{w:800,h:1250},
+        pools:{unplaced:[],coffee:[],no:noList()}
       }
     }
   };
@@ -361,6 +362,11 @@ try{
   if(raw){var j=JSON.parse(raw); if(j&&j.v===3&&j.sketches)state=j;}
 }catch(e){}
 if(!state)state=defaultState();
+/* one-time: mirror the round-table groups onto the horseshoe sketch (keeps the rundbord sketch untouched) */
+if(!state.mig2){
+  state.sketches.hestesko=defaultState().sketches.hestesko;
+  state.mig2=1;
+}
 function cur(){return state.sketches[state.active]}
 function room(){var c=cur();if(!c.room)c.room={w:VB.w,h:VB.h};return c.room}
 /* migrate older/imported layouts: room dims, door, and re-clamp everything into the room */

@@ -96,11 +96,24 @@
   }
   .tab:hover{border-color:var(--rose)}
   .tab.on{background:var(--rose); border-color:var(--rose); color:var(--pri-ink)}
+  .tabs{align-items:center}
+  .zoomctl{margin-left:auto; display:inline-flex; gap:6px}
+  .zbtn{min-width:36px; text-align:center}
+  #pickHint{
+    background:var(--goldfill); border:1px solid var(--gold); color:var(--gold-ink);
+    border-radius:11px; padding:8px 12px; font-size:12.5px;
+  }
+  #pickHint button{
+    background:none; border:0; color:var(--rose); font-weight:650; cursor:pointer;
+    text-decoration:underline; padding:0; margin-left:6px;
+  }
+  .chip.picked{outline:2.5px solid var(--rose); outline-offset:1px}
+  .seat.movesrc circle{stroke:var(--rose); stroke-width:3}
   .stage{
     overflow:auto; background:var(--floor);
     border:1.5px solid var(--floorline); border-radius:16px; box-shadow:var(--shadow);
   }
-  #floor{display:block; width:1250px; max-width:none; user-select:none}
+  #floor{display:block; width:1250px; max-width:none; user-select:none; touch-action:none}
 
   /* ---------- SVG ---------- */
   .room{fill:var(--floor)}
@@ -211,9 +224,20 @@
   @media (max-width:940px){
     .app{flex-direction:column; align-items:stretch}
     .main{width:100%}
-    .stage{width:100%; max-width:100%}
+    .stage{width:100%; max-width:100%; max-height:76vh}
     .side{width:100%}
     .stats{margin-left:0; width:100%}
+  }
+  @media (max-width:640px){
+    .top{padding:10px 12px 6px; gap:8px 12px}
+    .brand h1{font-size:19px}
+    .brand .bow{font-size:16px}
+    .sub{font-size:11px}
+    .stats{font-size:11px}
+    .btn{padding:5px 8px; font-size:12px; border-radius:8px}
+    .app{padding:0 10px 14px; gap:10px}
+    .tab{padding:6px 11px; font-size:12px}
+    .panel{padding:10px 12px}
   }
 
   @media print{
@@ -261,7 +285,13 @@
     <div class="tabs" id="tabs">
       <button class="tab" data-sk="hestesko">Skisse 1 · Hestesko</button>
       <button class="tab" data-sk="rundbord">Skisse 2 · Rundbord</button>
+      <span class="zoomctl">
+        <button class="btn zbtn" id="zOut" title="Zoom ut">−</button>
+        <button class="btn zbtn" id="zFit" title="Tilpass kartet til skjermen">Tilpass</button>
+        <button class="btn zbtn" id="zIn" title="Zoom inn">+</button>
+      </span>
     </div>
+    <div id="pickHint" hidden></div>
     <div class="stage" id="stage">
       <svg id="floor" viewBox="0 0 1250 800" xmlns="http://www.w3.org/2000/svg" aria-label="Plantegning av lokalet"></svg>
     </div>
@@ -419,7 +449,41 @@ function save(){
   catch(e){canStore=false;syncSavedBase();return;}
   flash("Lagret ✓");
 }
-function commit(){save();render()}
+function commit(){
+  if(pick||moveFrom){pick=null;moveFrom=null;syncHint();}
+  save();render();
+}
+
+/* ---------- zoom ---------- */
+var zoom=0;
+try{
+  var zz=parseFloat(localStorage.getItem("bordkart-zoom"));
+  if(zz>0.2&&zz<=3)zoom=zz;
+}catch(e){}
+function applyZoom(){
+  var R=room();
+  if(!zoom){
+    var avail=Math.max(280,stage.clientWidth-4);
+    zoom=Math.min(1,Math.max(0.25,avail/R.w));
+  }
+  svg.style.width=Math.round(R.w*zoom)+"px";
+}
+function saveZoom(){try{localStorage.setItem("bordkart-zoom",String(zoom));}catch(e){}}
+function setZoomAround(z,cx,cy){
+  z=Math.min(2.5,Math.max(0.25,z));
+  var r=stage.getBoundingClientRect();
+  var vx=cx-r.left,vy=cy-r.top;
+  var ratio=z/zoom;
+  var nl=(stage.scrollLeft+vx)*ratio-vx;
+  var nt=(stage.scrollTop+vy)*ratio-vy;
+  zoom=z;applyZoom();
+  stage.scrollLeft=nl;stage.scrollTop=nt;
+}
+function zoomCenter(f){
+  var r=stage.getBoundingClientRect();
+  setZoomAround(zoom*f,r.left+r.width/2,r.top+r.height/2);
+  saveZoom();
+}
 
 /* ---------- geometry ---------- */
 function hsDims(t){
@@ -516,6 +580,7 @@ function nameLines(n){
 }
 function seatSVG(t,i,pt){
   var st=t.seats[i], cls="seat "+(st.n?st.s:"ledig"), rr=t.r||0;
+  if(moveFrom&&moveFrom.tid===t.id&&moveFrom.i===i)cls+=" movesrc";
   var nl=nameLines(st.n), txt="";
   if(nl.lines.length===1){
     txt='<text font-size="'+nl.fs+'" y="3.5">'+esc(nl.lines[0])+"</text>";
@@ -561,7 +626,7 @@ function tableSVG(t){
 function render(){
   var R=room();
   svg.setAttribute("viewBox","0 0 "+R.w+" "+R.h);
-  svg.style.width=R.w+"px";
+  applyZoom();
   document.getElementById("pageOrient").textContent="@media print{@page{size:A4 "+(R.w>=R.h?"landscape":"portrait")+"}}";
   var out='<defs><pattern id="dots" width="30" height="30" patternUnits="userSpaceOnUse"><circle cx="15" cy="15" r="1.1" fill="var(--grid)"/></pattern></defs>';
   out+='<rect class="room" x="10" y="10" width="'+(R.w-20)+'" height="'+(R.h-20)+'" rx="18"/>';
@@ -581,7 +646,8 @@ function renderPools(){
     var key=boxes[b].getAttribute("data-pool"), arr=cur().pools[key], html="";
     for(var i=0;i<arr.length;i++){
       var g=arr[i];
-      html+='<button class="chip '+(g.s==="usikker"?"usikker":"")+'" data-pool="'+key+'" data-i="'+i+'">'+esc(g.n)
+      var picked=(pick&&pick.pool===key&&g.n===pick.n)?" picked":"";
+      html+='<button class="chip '+(g.s==="usikker"?"usikker":"")+picked+'" data-pool="'+key+'" data-i="'+i+'">'+esc(g.n)
         +(g.s==="usikker"?'<span class="qb">?</span>':"")
         +(key==="unplaced"?'<span class="x" data-x="1" title="Fjern fra listen">×</span>':"")
         +"</button>";
@@ -624,7 +690,9 @@ function openSeatPop(tid,i){
     '<div class="pseg" id="pseg">'+
       '<button data-s="ok">Kommer</button><button data-s="usikker">Usikker</button><button data-s="vert">Vertskap</button>'+
     "</div>"+
-    '<div class="prow2"><button class="ghostbtn" id="pclear">Tøm plass</button><span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
+    '<div class="prow2"><button class="ghostbtn" id="pclear">Tøm plass</button>'+
+    (st.n?'<button class="ghostbtn" id="pmove">Flytt</button>':"")+
+    '<span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
   var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .seat[data-i="'+i+'"]');
   placePop(anchor);
   syncSeg();
@@ -690,6 +758,11 @@ pop.addEventListener("click",function(e){
     return;
   }
   if(e.target.id==="psave")doPopSave();
+  if(e.target.id==="pmove"){
+    moveFrom={tid:popCtx.tid,i:popCtx.i};pick=null;
+    closePop();syncHint();render();
+    return;
+  }
   if(e.target.id==="pclear"){
     var t=getT(popCtx.tid),st=t.seats[popCtx.i];
     if(st.n)cur().pools.unplaced.push({n:st.n,s:st.s==="usikker"?"usikker":"ok"});
@@ -725,7 +798,45 @@ document.addEventListener("pointerdown",function(e){
 stage.addEventListener("scroll",closePop);
 
 /* ---------- drag & drop ---------- */
-var press=null,lastHover=null;
+var press=null,lastHover=null,pick=null,moveFrom=null;
+var pts={},pinch=null,pan=null;
+function ptCount(){return Object.keys(pts).length}
+function clearModes(){pick=null;moveFrom=null;syncHint();}
+function syncHint(){
+  var el=document.getElementById("pickHint");
+  if(pick){
+    el.hidden=false;
+    el.innerHTML='Trykk på plassen der <b>'+esc(pick.n)+'</b> skal sitte<button id="pickCancel">Avbryt</button>';
+  }else if(moveFrom){
+    var s=getT(moveFrom.tid)&&getT(moveFrom.tid).seats[moveFrom.i];
+    if(!s||!s.n){el.hidden=true;moveFrom=null;return;}
+    el.hidden=false;
+    el.innerHTML='Trykk på plassen <b>'+esc(s.n)+'</b> skal flytte til<button id="pickCancel">Avbryt</button>';
+  }else el.hidden=true;
+}
+function applyPick(tid,i){
+  var arr=cur().pools[pick.pool],idx=-1;
+  for(var k=0;k<arr.length;k++)if(arr[k].n===pick.n){idx=k;break;}
+  if(idx<0){clearModes();renderPools();return false;}
+  var t=getT(tid),dst=t.seats[i];
+  if(dst.n)cur().pools.unplaced.push({n:dst.n,s:dst.s==="usikker"?"usikker":"ok"});
+  t.seats[i]={n:arr[idx].n,s:arr[idx].s==="usikker"?"usikker":"ok"};
+  arr.splice(idx,1);
+  commit();return true;
+}
+function applyMove(tid,i){
+  var src=getT(moveFrom.tid).seats[moveFrom.i];
+  if(!src.n){clearModes();render();return true;}
+  if(!(tid===moveFrom.tid&&i===moveFrom.i)){
+    var dst=getT(tid).seats[i];
+    getT(tid).seats[i]={n:src.n,s:src.s};
+    getT(moveFrom.tid).seats[moveFrom.i]=dst.n?{n:dst.n,s:dst.s}:{n:"",s:"ok"};
+  }
+  commit();return true;
+}
+document.getElementById("pickHint").addEventListener("click",function(e){
+  if(e.target.id==="pickCancel"){clearModes();render();}
+});
 function scaleF(){return svg.getBoundingClientRect().width/room().w}
 function showGhost(n){ghost.textContent=n;ghost.hidden=false}
 function moveGhost(x,y){ghost.style.left=x+"px";ghost.style.top=y+"px"}
@@ -751,17 +862,44 @@ function clearHints(){
 
 svg.addEventListener("pointerdown",function(e){
   if(e.button!==undefined&&e.button!==0)return;
+  pts[e.pointerId]={x:e.clientX,y:e.clientY};
+  try{svg.setPointerCapture(e.pointerId);}catch(err){}
+  if(ptCount()===2){
+    if(press){press=null;hideGhost();clearHints();render();}
+    pan=null;
+    var ks=Object.keys(pts),a=pts[ks[0]],b=pts[ks[1]];
+    pinch={d0:Math.max(20,Math.hypot(a.x-b.x,a.y-b.y)),z0:zoom};
+    e.preventDefault();return;
+  }
+  if(pinch){e.preventDefault();return;}
   var seat=e.target.closest(".seat");
   var grab=e.target.closest(".tbl-body")||e.target.closest(".tbl-label")||e.target.closest(".tbl-count");
-  if(!seat&&!grab)return;
-  var g=e.target.closest(".tbl");if(!g)return;
-  press={x0:e.clientX,y0:e.clientY,moved:false,tid:g.getAttribute("data-t")};
-  if(seat){press.mode="seat";press.i=+seat.getAttribute("data-i");press.el=seat;}
-  else{press.mode="table";press.el=g;}
-  svg.setPointerCapture(e.pointerId);
+  if(seat||grab){
+    var g=e.target.closest(".tbl");if(!g)return;
+    press={x0:e.clientX,y0:e.clientY,moved:false,tid:g.getAttribute("data-t")};
+    if(seat){press.mode="seat";press.i=+seat.getAttribute("data-i");press.el=seat;}
+    else{press.mode="table";press.el=g;}
+  }else{
+    pan={x0:e.clientX,y0:e.clientY,sl:stage.scrollLeft,st:stage.scrollTop};
+  }
   e.preventDefault();
 });
 svg.addEventListener("pointermove",function(e){
+  if(pts[e.pointerId]){pts[e.pointerId].x=e.clientX;pts[e.pointerId].y=e.clientY;}
+  if(pinch){
+    var ks=Object.keys(pts);
+    if(ks.length>=2){
+      var a=pts[ks[0]],b=pts[ks[1]];
+      var d=Math.hypot(a.x-b.x,a.y-b.y);
+      setZoomAround(pinch.z0*d/pinch.d0,(a.x+b.x)/2,(a.y+b.y)/2);
+    }
+    return;
+  }
+  if(pan){
+    stage.scrollLeft=pan.sl-(e.clientX-pan.x0);
+    stage.scrollTop=pan.st-(e.clientY-pan.y0);
+    return;
+  }
   if(!press)return;
   var dx=e.clientX-press.x0,dy=e.clientY-press.y0;
   if(press.moved===false&&Math.hypot(dx,dy)>7){
@@ -787,7 +925,11 @@ function endPress(e){
   if(!press)return;
   var p=press;press=null;hideGhost();clearHints();
   if(p.moved===false||p.moved==="empty"){
-    if(p.mode==="seat")openSeatPop(p.tid,p.i);
+    if(p.mode==="seat"){
+      if(pick){applyPick(p.tid,p.i);return;}
+      if(moveFrom){applyMove(p.tid,p.i);return;}
+      openSeatPop(p.tid,p.i);
+    }
     else openTablePop(p.tid);
     return;
   }
@@ -813,8 +955,16 @@ function endPress(e){
   }
   render();
 }
-svg.addEventListener("pointerup",endPress);
-svg.addEventListener("pointercancel",function(){
+svg.addEventListener("pointerup",function(e){
+  delete pts[e.pointerId];
+  if(pinch){if(ptCount()<2){pinch=null;saveZoom();}return;}
+  if(pan){pan=null;return;}
+  endPress(e);
+});
+svg.addEventListener("pointercancel",function(e){
+  delete pts[e.pointerId];
+  if(pinch&&ptCount()<2){pinch=null;saveZoom();}
+  pan=null;
   if(!press)return;press=null;hideGhost();clearHints();render();
 });
 
@@ -825,7 +975,7 @@ side.addEventListener("pointerdown",function(e){
   cpress={x0:e.clientX,y0:e.clientY,moved:false,el:c,
           pool:c.getAttribute("data-pool"),i:+c.getAttribute("data-i"),
           onX:!!e.target.closest("[data-x]")};
-  c.setPointerCapture(e.pointerId);
+  try{c.setPointerCapture(e.pointerId);}catch(err){}
   e.preventDefault();
 });
 side.addEventListener("pointermove",function(e){
@@ -833,6 +983,7 @@ side.addEventListener("pointermove",function(e){
   var dx=e.clientX-cpress.x0,dy=e.clientY-cpress.y0;
   if(!cpress.moved&&Math.hypot(dx,dy)>7){
     cpress.moved=true;
+    clearModes();
     showGhost(cur().pools[cpress.pool][cpress.i].n);
     cpress.el.classList.add("dragging");
   }
@@ -844,7 +995,12 @@ side.addEventListener("pointerup",function(e){
   p.el.classList.remove("dragging");
   var g=cur().pools[p.pool][p.i];
   if(!p.moved){
-    if(p.onX&&p.pool==="unplaced"){cur().pools.unplaced.splice(p.i,1);commit();}
+    if(p.onX&&p.pool==="unplaced"){cur().pools.unplaced.splice(p.i,1);commit();return;}
+    if(g){
+      moveFrom=null;
+      pick=(pick&&pick.pool===p.pool&&pick.n===g.n)?null:{pool:p.pool,n:g.n};
+      syncHint();renderPools();
+    }
     return;
   }
   var d=dropAt(e.clientX,e.clientY);
@@ -865,7 +1021,13 @@ tabsEl.addEventListener("click",function(e){
   var b=e.target.closest(".tab");if(!b)return;
   var sk=b.getAttribute("data-sk");
   if(sk===state.active)return;
-  state.active=sk;closePop();save();render();
+  state.active=sk;closePop();clearModes();save();render();
+});
+document.getElementById("zIn").addEventListener("click",function(){zoomCenter(1.25)});
+document.getElementById("zOut").addEventListener("click",function(){zoomCenter(1/1.25)});
+document.getElementById("zFit").addEventListener("click",function(){
+  zoom=0;applyZoom();saveZoom();
+  stage.scrollLeft=0;stage.scrollTop=0;
 });
 document.getElementById("addRound").addEventListener("click",function(){
   var ts=cur().tables,n=0;
@@ -1001,7 +1163,7 @@ document.getElementById("upFile").addEventListener("change",function(e){
       var j=JSON.parse(r.result);
       var st=j&&j.state?j.state:j;
       if(!(st&&st.v===3&&st.sketches))throw new Error("bad");
-      state=st;migrateState();closePop();save();render();
+      state=st;migrateState();closePop();clearModes();save();render();
       flash("Hentet inn ✓");
     }catch(err){
       alert("Kunne ikke lese filen – er dette en nedlastet bordkart-fil (.json)?");
@@ -1013,7 +1175,7 @@ document.getElementById("printBtn").addEventListener("click",function(){window.p
 document.getElementById("resetBtn").addEventListener("click",function(){
   if(confirm("Nullstille begge skissene til det opprinnelige forslaget? Endringene dine slettes.")){
     try{localStorage.removeItem(LS_KEY);}catch(e){}
-    state=defaultState();render();
+    state=defaultState();clearModes();render();
   }
 });
 

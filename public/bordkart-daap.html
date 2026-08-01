@@ -79,6 +79,8 @@
   }
   .actions .saved.on{opacity:1}
   .actions .saved.warnp{opacity:1; color:var(--amber)}
+  .cloudst{font-size:11px; color:var(--muted)}
+  .cloudst.warn{color:var(--amber)}
   .btn{
     background:var(--btn); border:1px solid var(--btn-line); border-radius:9px;
     padding:6px 11px; cursor:pointer; font-size:13px;
@@ -290,6 +292,7 @@
     <input type="file" id="upFile" accept=".json,application/json" hidden>
     <button class="btn warn" id="resetBtn">Nullstill</button>
     <span class="saved" id="saved">Lagret ✓</span>
+    <span class="cloudst" id="cloudSt" hidden></span>
   </div>
 </header>
 
@@ -462,19 +465,120 @@ function flash(msg){
 }
 var bkDismissed=false;
 function updateBkHint(){
-  document.getElementById("bkHint").hidden=bkDismissed||((state.bk||0)<12);
+  document.getElementById("bkHint").hidden=bkDismissed||cloud.on||((state.bk||0)<12);
 }
 function rawSave(){
   try{localStorage.setItem(LS_KEY,JSON.stringify(state));return true;}
   catch(e){return false;}
 }
 function save(){
+  state.ts=Date.now();
   state.bk=(state.bk||0)+1;
   updateBkHint();
+  cloudQueue();
   if(!canStore)return;
   if(!rawSave()){canStore=false;syncSavedBase();return;}
   flash("Lagret ✓");
 }
+
+/* ---------- Google Drive-autolagring (via claude.ai-connector) ---------- */
+var DRIVE="Google_Drive",AS_NAME="bordkart-daap-autosave.json";
+var cloud={on:false,busy:false,pending:0,timer:null,last:0,status:"",retried:false};
+function mcpOK(){return !!(window.claude&&window.claude.mcp&&window.claude.mcp.callTool)}
+function b64ToStr(b64){
+  var bin=atob(b64),arr=new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return new TextDecoder("utf-8").decode(arr);
+}
+function payloadOf(res){
+  var p=res&&res.payload;
+  if(typeof p==="string"){try{return JSON.parse(p);}catch(e){return null;}}
+  return p||null;
+}
+function syncCloudUI(){
+  var el=document.getElementById("cloudSt");
+  if(cloud.status){el.hidden=false;el.textContent="☁ "+cloud.status;el.classList.add("warn");}
+  else if(cloud.on){el.hidden=false;el.textContent="☁ Autolagres til Google Drive";el.classList.remove("warn");}
+  else el.hidden=true;
+  updateBkHint();
+}
+function cloudErr(err){
+  var c=err&&err.code;
+  if(c==="needs_reauth")cloud.status="Koble til Google Drive på nytt: claude.ai → Innstillinger → Connectors";
+  else if(c==="server_not_connected"||c==="selection_required")cloud.status="Legg til Google Drive i claude.ai → Innstillinger → Connectors";
+  else if(c==="not_granted"||c==="capability_disabled"||c==="capability_removed"||c==="not_in_manifest"||c==="blocked_by_policy"||c==="approval_required"){cloud.on=false;cloud.status="";}
+  else cloud.status="Fikk ikke autolagret til Drive nå – lagres lokalt";
+  syncCloudUI();
+}
+function adoptRemote(st){
+  st.bk=0;
+  state=st;migrateState();clearModes();closePop();
+  if(canStore)rawSave();
+  render();
+  flash("Hentet siste autolagring fra Drive ✓");
+}
+function cloudInit(){
+  if(!mcpOK())return;
+  window.claude.mcp.callTool(DRIVE,"search_files",
+    {query:"title contains 'bordkart-daap-autosave'",pageSize:10},{cache:false})
+  .then(function(res){
+    cloud.on=true;cloud.status="";syncCloudUI();
+    var p=payloadOf(res)||{};
+    var files=(p.files||[]).filter(function(f){return f.mimeType==="application/json"});
+    files.sort(function(a,b){return new Date(b.modifiedTime||0)-new Date(a.modifiedTime||0)});
+    if(!files.length)return null;
+    return window.claude.mcp.callTool(DRIVE,"download_file_content",{fileId:files[0].id},{cache:false})
+      .then(function(r2){
+        var pl=payloadOf(r2),content=pl&&pl.content;
+        if(!content)return;
+        var j=JSON.parse(b64ToStr(content));
+        var st=j&&j.state?j.state:j;
+        if(!(st&&st.v===3&&st.sketches))return;
+        if((st.ts||0)>(state.ts||0))adoptRemote(st);
+      });
+  })
+  .catch(function(err){
+    if(err&&err.retryable&&!cloud.retried){
+      cloud.retried=true;
+      setTimeout(cloudInit,(err.retryAfterMs||1500)+Math.floor(Math.random()*1000));
+      return;
+    }
+    cloudErr(err);
+  });
+}
+function cloudQueue(){
+  if(!mcpOK()||!cloud.on)return;
+  cloud.pending++;
+  if(cloud.pending<2)return;
+  clearTimeout(cloud.timer);
+  cloud.timer=setTimeout(cloudSaveNow,4000);
+}
+function cloudSaveNow(){
+  if(!mcpOK()||!cloud.on||cloud.busy)return;
+  var now=Date.now();
+  if(cloud.last&&now-cloud.last<45000){
+    clearTimeout(cloud.timer);
+    cloud.timer=setTimeout(cloudSaveNow,45000-(now-cloud.last)+250);
+    return;
+  }
+  cloud.busy=true;cloud.pending=0;cloud.last=now;
+  window.claude.mcp.callTool(DRIVE,"create_file",
+    {title:AS_NAME,textContent:exportJSON(),contentMimeType:"application/json",disableConversionToGoogleType:true},
+    {cache:false})
+  .then(function(){
+    cloud.busy=false;cloud.status="";syncCloudUI();
+    flash("Autolagret til Drive ✓");
+  })
+  .catch(function(err){
+    cloud.busy=false;cloud.pending=2;
+    cloudErr(err);
+  });
+}
+document.addEventListener("visibilitychange",function(){
+  if(document.visibilityState==="hidden"&&cloud.pending>0){
+    clearTimeout(cloud.timer);cloud.last=0;cloudSaveNow();
+  }
+});
 function commit(){
   if(pick||moveFrom){pick=null;moveFrom=null;syncHint();}
   save();render();
@@ -1252,6 +1356,7 @@ syncSavedBase();
 if(!canStore)savedEl.classList.add("on");
 updateBkHint();
 render();
+cloudInit();
 })();
 </script>
 

@@ -109,6 +109,15 @@
   }
   .chip.picked{outline:2.5px solid var(--rose); outline-offset:1px}
   .seat.movesrc circle{stroke:var(--rose); stroke-width:3}
+  .bk{
+    background:var(--amberfill); border:1px solid var(--amber); color:var(--ink);
+    border-radius:11px; padding:8px 12px; font-size:12.5px;
+  }
+  .bk button{
+    background:none; border:0; color:var(--rose); font-weight:650; cursor:pointer;
+    text-decoration:underline; padding:0; margin-left:8px;
+  }
+  .bk #bkX{text-decoration:none; color:var(--muted); font-size:14px}
   .stage{
     overflow:auto; background:var(--floor);
     border:1.5px solid var(--floorline); border-radius:16px; box-shadow:var(--shadow);
@@ -193,7 +202,11 @@
   #pop input{
     width:100%; background:var(--paper); color:var(--ink);
     border:1px solid var(--btn-line); border-radius:8px; padding:7px 9px; font:inherit;
+    font-size:16px;
   }
+  .pquick-h{font-size:11px; color:var(--muted); margin:2px 0 6px}
+  .pop-chips{display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow:auto; margin-bottom:8px}
+  .pop-chips .chip{cursor:pointer}
   #pop input:focus{border-color:var(--rose); outline:none}
   .pseg{display:flex; gap:5px; margin-top:8px}
   .pseg button{
@@ -282,6 +295,10 @@
 
 <div class="app">
   <div class="main">
+    <div id="bkHint" class="bk" hidden>
+      💾 Mange endringer siden sist sikkerhetskopi – ta en kopi i tilfelle appen nullstiller lagringen.
+      <button id="bkNow">Last ned fil nå</button><button id="bkX" title="Lukk">×</button>
+    </div>
     <div class="tabs" id="tabs">
       <button class="tab" data-sk="hestesko">Skisse 1 · Hestesko</button>
       <button class="tab" data-sk="rundbord">Skisse 2 · Rundbord</button>
@@ -443,10 +460,19 @@ function flash(msg){
   clearTimeout(savedTimer);
   savedTimer=setTimeout(function(){savedEl.classList.remove("on");syncSavedBase();},1400);
 }
+var bkDismissed=false;
+function updateBkHint(){
+  document.getElementById("bkHint").hidden=bkDismissed||((state.bk||0)<12);
+}
+function rawSave(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(state));return true;}
+  catch(e){return false;}
+}
 function save(){
+  state.bk=(state.bk||0)+1;
+  updateBkHint();
   if(!canStore)return;
-  try{localStorage.setItem(LS_KEY,JSON.stringify(state));}
-  catch(e){canStore=false;syncSavedBase();return;}
+  if(!rawSave()){canStore=false;syncSavedBase();return;}
   flash("Lagret ✓");
 }
 function commit(){
@@ -682,10 +708,26 @@ function placePop(anchor){
   var ph=pop.getBoundingClientRect().height;
   if(y+ph>window.innerHeight-8)pop.style.top=Math.max(8,r.top-ph-9)+"px";
 }
-function openSeatPop(tid,i){
+function isTouchLike(pt){
+  if(pt==="touch"||pt==="pen")return true;
+  if(pt===undefined||pt==="")return matchMedia("(pointer: coarse)").matches;
+  return false;
+}
+function quickChips(){
+  var out="",pools=cur().pools,order=["unplaced","coffee","no"],k,j;
+  for(j=0;j<order.length;j++){
+    var arr=pools[order[j]];
+    for(k=0;k<arr.length;k++){
+      out+='<button class="chip '+(arr[k].s==="usikker"?"usikker":"")+'" data-qp="'+order[j]+'" data-qn="'+esc(arr[k].n)+'">'+esc(arr[k].n)+"</button>";
+    }
+  }
+  return out?'<div class="pquick-h">Trykk for å plassere her:</div><div class="pop-chips">'+out+"</div>":"";
+}
+function openSeatPop(tid,i,ptype){
   var t=getT(tid),st=t.seats[i];
   popCtx={kind:"seat",tid:tid,i:i,s:st.n?st.s:"ok"};
   pop.innerHTML=
+    (st.n?"":quickChips())+
     '<input id="pname" placeholder="Navn (tomt = ledig plass)" value="'+esc(st.n)+'" maxlength="30">'+
     '<div class="pseg" id="pseg">'+
       '<button data-s="ok">Kommer</button><button data-s="usikker">Usikker</button><button data-s="vert">Vertskap</button>'+
@@ -696,8 +738,10 @@ function openSeatPop(tid,i){
   var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .seat[data-i="'+i+'"]');
   placePop(anchor);
   syncSeg();
-  var inp=document.getElementById("pname");
-  inp.focus();inp.select();
+  if(!isTouchLike(ptype)){
+    var inp=document.getElementById("pname");
+    inp.focus();inp.select();
+  }
 }
 function syncSeg(){
   var btns=pop.querySelectorAll("#pseg button");
@@ -709,7 +753,7 @@ function stepRow(label,key,val){
     '<span class="num" id="n-'+key+'">'+val+'</span>'+
     '<button data-st="'+key+':1" aria-label="Flere">+</button></span></div>';
 }
-function openTablePop(tid){
+function openTablePop(tid,ptype){
   var t=getT(tid);
   popCtx={kind:"table",tid:tid};
   var stp="";
@@ -727,12 +771,28 @@ function openTablePop(tid){
     '<span class="sp"></span><button class="pri" id="psave">Lagre</button></div>';
   var anchor=svg.querySelector('.tbl[data-t="'+tid+'"] .tbl-body');
   placePop(anchor);
-  var inp=document.getElementById("pname");
-  inp.focus();inp.select();
+  if(!isTouchLike(ptype)){
+    var inp=document.getElementById("pname");
+    inp.focus();inp.select();
+  }
 }
 pop.addEventListener("click",function(e){
   var segBtn=e.target.closest("#pseg button");
   if(segBtn){popCtx.s=segBtn.getAttribute("data-s");syncSeg();return;}
+  var qc=e.target.closest("[data-qp]");
+  if(qc&&popCtx&&popCtx.kind==="seat"){
+    var qpool=qc.getAttribute("data-qp"),qn=qc.getAttribute("data-qn");
+    var qarr=cur().pools[qpool],qi=-1;
+    for(var qk=0;qk<qarr.length;qk++)if(qarr[qk].n===qn){qi=qk;break;}
+    if(qi>=0){
+      var qt=getT(popCtx.tid),qdst=qt.seats[popCtx.i];
+      if(qdst.n)cur().pools.unplaced.push({n:qdst.n,s:qdst.s==="usikker"?"usikker":"ok"});
+      qt.seats[popCtx.i]={n:qarr[qi].n,s:qarr[qi].s==="usikker"?"usikker":"ok"};
+      qarr.splice(qi,1);
+      closePop();commit();
+    }
+    return;
+  }
   var st=e.target.closest("[data-st]");
   if(st&&popCtx&&popCtx.kind==="table"){
     var parts=st.getAttribute("data-st").split(":"),key=parts[0],dv=+parts[1];
@@ -928,9 +988,9 @@ function endPress(e){
     if(p.mode==="seat"){
       if(pick){applyPick(p.tid,p.i);return;}
       if(moveFrom){applyMove(p.tid,p.i);return;}
-      openSeatPop(p.tid,p.i);
+      openSeatPop(p.tid,p.i,e.pointerType);
     }
-    else openTablePop(p.tid);
+    else openTablePop(p.tid,e.pointerType);
     return;
   }
   if(p.mode==="table"){
@@ -1137,6 +1197,9 @@ document.getElementById("imgBtn").addEventListener("click",function(){
 });
 document.getElementById("dlBtn").addEventListener("click",function(){
   var name="bordkart-daap-"+new Date().toISOString().slice(0,10)+".json";
+  state.bk=0;
+  if(canStore)rawSave();
+  updateBkHint();
   var data=exportJSON();
   if(window.claude&&window.claude.downloads){
     window.claude.downloads.save({filename:name,data:data})
@@ -1179,8 +1242,15 @@ document.getElementById("resetBtn").addEventListener("click",function(){
   }
 });
 
+document.getElementById("bkNow").addEventListener("click",function(){
+  document.getElementById("dlBtn").click();
+});
+document.getElementById("bkX").addEventListener("click",function(){
+  bkDismissed=true;updateBkHint();
+});
 syncSavedBase();
 if(!canStore)savedEl.classList.add("on");
+updateBkHint();
 render();
 })();
 </script>

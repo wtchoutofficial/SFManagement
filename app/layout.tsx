@@ -28,16 +28,16 @@ export const metadata: Metadata = {
     "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
   icons: {
     icon: [
-      { url: "/sf-crown-dark.jpg", media: "(prefers-color-scheme: light)" },
-      { url: "/sf-crown.jpg", media: "(prefers-color-scheme: dark)" },
+      { url: "/sf-crown-dark.png", media: "(prefers-color-scheme: light)" },
+      { url: "/sf-crown.png", media: "(prefers-color-scheme: dark)" },
     ],
-    apple: "/sf-crown.jpg",
+    apple: "/sf-crown.png",
   },
   openGraph: {
     title: "SF Management — Premium Creator Management Agency",
     description:
       "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
-    images: [{ url: "/og-image.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/og-image.png", width: 1200, height: 630 }],
     siteName: "SF Management",
   },
   twitter: {
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     title: "SF Management — Premium Creator Management Agency",
     description:
       "The premier Scandinavian management agency located in Norway. We do the heavy lifting, you keep the focus on creation.",
-    images: ["/og-image.jpg"],
+    images: ["/og-image.png"],
   },
 };
 

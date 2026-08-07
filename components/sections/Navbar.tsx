@@ -96,7 +96,7 @@ export function Navbar() {
           <div className="max-w-7xl mx-auto px-6 md:px-12 grid grid-cols-3 items-center h-20">
             {/* Left — Logo */}
             <a href="#home" className="flex items-center gap-3 font-bold text-text transition-all duration-300 font-heading">
-              <Image src="/sf-crown.png" alt="SF Management" width={40} height={40} priority className="h-10 w-auto" />
+              <Image src="/sf-crown.jpg" alt="SF Management" width={40} height={40} priority className="h-10 w-auto" />
               <span className="text-lg whitespace-nowrap">SF Management</span>
             </a>
 

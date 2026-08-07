@@ -9,7 +9,7 @@ export function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 text-xl font-bold text-text font-heading">
-              <Image src="/sf-crown.png" alt="SF Management" width={40} height={40} loading="lazy" className="h-10 w-auto" />
+              <Image src="/sf-crown.jpg" alt="SF Management" width={40} height={40} loading="lazy" className="h-10 w-auto" />
               SF Management
             </div>
             <p className="text-muted text-sm mt-3 leading-relaxed">
